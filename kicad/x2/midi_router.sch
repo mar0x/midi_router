@@ -796,7 +796,7 @@ F 1 "DIN-5_180degree" H 9950 3024 50  0000 C CNN
 F 2 "lib:DIN5MIDI-OOTDTY" H 9950 3300 50  0001 C CNN
 F 3 "http://www.mouser.com/ds/2/18/40_c091_abd_e-75918.pdf" H 9950 3300 50  0001 C CNN
 	1    9950 3300
-	1    0    0    1   
+	-1   0    0    1   
 $EndComp
 $Comp
 L Connector:DIN-5_180degree J5
@@ -807,7 +807,7 @@ F 1 "DIN-5_180degree" H 9950 3874 50  0000 C CNN
 F 2 "lib:DIN5MIDI-OOTDTY" H 9950 4150 50  0001 C CNN
 F 3 "http://www.mouser.com/ds/2/18/40_c091_abd_e-75918.pdf" H 9950 4150 50  0001 C CNN
 	1    9950 4150
-	1    0    0    1   
+	-1   0    0    1   
 $EndComp
 $Comp
 L Device:R R9
