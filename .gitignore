@@ -1,0 +1,13 @@
+.DS_Store
+*.bak
+*.kicad_pcb-bak
+*.sch-bak
+*-cache.lib
+*.net
+fp-info-cache
+*.o
+*.bin
+*.elf
+*.hex
+miniconda3
+backup
