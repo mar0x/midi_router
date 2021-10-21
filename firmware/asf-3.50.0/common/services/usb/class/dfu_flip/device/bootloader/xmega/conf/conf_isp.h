@@ -62,27 +62,42 @@
 
 // Definition of hardware condition to enter in ISP mode
 #if XMEGA_A1U
+
+#if defined(MIDI_ROUTER_X2)
+# define ISP_PORT_DIR      PORTC_DIR
+# define ISP_PORT_PINCTRL  PORTC_PIN2CTRL
+# define ISP_PORT_IN       PORTC_IN
+# define ISP_PORT_PIN      2
+#elif defined(MIDI_ROUTER_X7)
+# define ISP_PORT_DIR      PORTC_DIR
+# define ISP_PORT_PINCTRL  PORTC_PIN3CTRL
+# define ISP_PORT_IN       PORTC_IN
+# define ISP_PORT_PIN      3
+#else
 # define ISP_PORT_DIR      PORTF_DIR
 # define ISP_PORT_PINCTRL  PORTF_PIN5CTRL
 # define ISP_PORT_IN       PORTF_IN
 # define ISP_PORT_PIN      0
+#endif
 #elif (XMEGA_A3U || XMEGA_A3BU)
 # define ISP_PORT_DIR      PORTE_DIR
 # define ISP_PORT_PINCTRL  PORTE_PIN5CTRL
 # define ISP_PORT_IN       PORTE_IN
 # define ISP_PORT_PIN      5
 #elif (XMEGA_A4U || XMEGA_C4)
-/*
-# define ISP_PORT_DIR      PORTC_DIR
-# define ISP_PORT_PINCTRL  PORTC_PIN3CTRL
-# define ISP_PORT_IN       PORTC_IN
-# define ISP_PORT_PIN      3
-*/
 
+#if defined(MIDI_ROUTER_X4)
 # define ISP_PORT_DIR      PORTC_DIR
 # define ISP_PORT_PINCTRL  PORTC_PIN1CTRL
 # define ISP_PORT_IN       PORTC_IN
 # define ISP_PORT_PIN      1
+#else
+# define ISP_PORT_DIR      PORTC_DIR
+# define ISP_PORT_PINCTRL  PORTC_PIN3CTRL
+# define ISP_PORT_IN       PORTC_IN
+# define ISP_PORT_PIN      3
+#endif
+
 #elif XMEGA_B
 # define ISP_PORT_DIR      PORTC_DIR
 # define ISP_PORT_PINCTRL  PORTC_PIN6CTRL

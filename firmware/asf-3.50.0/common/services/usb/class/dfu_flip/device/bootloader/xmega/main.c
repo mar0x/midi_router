@@ -48,10 +48,49 @@ int main(void)
 	sysclk_init();
 	cpu_irq_enable();
 
+#if defined(MIDI_ROUTER_X4)
+# define ISP_LED_ON (PORTA.OUTSET = (1 << 6))
+# define ISP_LED_OFF (PORTA.OUTCLR = (1 << 6))
+
 	PORTA.DIRSET = (1 << 5) | (1 << 6) | (1 << 7);
 	PORTB.DIRSET = (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3);
-	PORTC.DIRSET = (1 << 4) | (1 << 5);
-	PORTD.DIRSET = (1 << 0) | (1 << 1);
+	PORTC.DIRSET = (1 << 3) | (1 << 4) | (1 << 5) | (1 << 7);
+	PORTD.DIRSET = (1 << 0) | (1 << 1) | (1 << 3);
+	PORTE.DIRSET = (1 << 3);
+#elif defined(MIDI_ROUTER_X2)
+# define ISP_LED_ON (PORTD.OUTSET = (1 << 1))
+# define ISP_LED_OFF (PORTD.OUTCLR = (1 << 1))
+
+	PORTC.DIRSET = (1 << 0) | (1 << 1) | (1 << 3) | (1 << 4) | (1 << 5) | (1 << 7);
+	PORTD.DIRSET = (1 << 0) | (1 << 1) | (1 << 3) | (1 << 4);
+	PORTE.DIRSET = (1 << 0) | (1 << 1) | (1 << 3) | (1 << 4) | (1 << 5) | (1 << 7);
+	PORTF.DIRSET = (1 << 0) | (1 << 1) | (1 << 3) | (1 << 4) | (1 << 5) | (1 << 7);
+
+	PORTC.OUTSET = (1 << 3) | (1 << 7);
+	PORTD.DIRSET = (1 << 3);
+	PORTE.OUTSET = (1 << 3) | (1 << 7);
+	PORTF.OUTSET = (1 << 3) | (1 << 7);
+#elif defined(MIDI_ROUTER_X7)
+# define ISP_LED_ON (PORTD.OUTSET = (1 << 5))
+# define ISP_LED_OFF (PORTD.OUTCLR = (1 << 5))
+
+	PORTA.DIRSET = (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5);
+	PORTC.DIRSET = (1 << 3) | (1 << 7);
+	PORTD.DIRSET = (1 << 0) | (1 << 1) | (1 << 3) | (1 << 4) | (1 << 5);
+	PORTE.DIRSET = (1 << 3) | (1 << 7);
+	PORTF.DIRSET = (1 << 3) | (1 << 5) | (1 << 7);
+	PORTJ.DIRSET = (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5) | (1 << 6) | (1 << 7);
+
+	PORTC.OUTSET = (1 << 3) | (1 << 7);
+	PORTD.DIRSET = (1 << 3);
+	PORTE.OUTSET = (1 << 3) | (1 << 7);
+	PORTF.OUTSET = (1 << 3) | (1 << 7);
+
+	PORTK.DIRSET = (1 << 1);
+#else
+# define ISP_LED_ON
+# define ISP_LED_OFF
+#endif
 
 	// Start USB stack to authorize VBus monitoring
 	udc_start();
@@ -65,10 +104,11 @@ void main_sof_action(void)
 	static uint8_t rst_count = 0;
 	uint16_t fn = udd_get_frame_number() % 256;
 
-	if (fn == 0) {
-		PORTA.OUTSET = 1 << 6;
+	switch (fn) {
+	case 0:
+		ISP_LED_ON;
 
-		if ((PORTC.IN & (1 << 1)) == 0) {
+		if ((ISP_PORT_IN & (1 << ISP_PORT_PIN)) == 0) {
 			rst_count++;
 			if (rst_count > 10) {
 				ccp_write_io((uint8_t *)&RST.CTRL, RST_SWRST_bm);
@@ -76,9 +116,11 @@ void main_sof_action(void)
 		} else {
 			rst_count = 0;
 		}
-	}
-	if (fn == 128) {
-		PORTA.OUTCLR = 1 << 6;
+		break;
+
+	case 128:
+		ISP_LED_OFF;
+		break;
 	}
 }
 

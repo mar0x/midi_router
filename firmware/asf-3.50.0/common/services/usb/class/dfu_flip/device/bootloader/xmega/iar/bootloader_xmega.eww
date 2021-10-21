@@ -8,11 +8,19 @@
             <name>All</name>
             <member>
                 <project>bootloader_xmega</project>
-                <configuration>Debug</configuration>
+                <configuration>atxmega128a1u-x2</configuration>
             </member>
             <member>
                 <project>bootloader_xmega</project>
-                <configuration>Release</configuration>
+                <configuration>atxmega128a1u-x7</configuration>
+            </member>
+            <member>
+                <project>bootloader_xmega</project>
+                <configuration>atxmega128a4u-x4</configuration>
+            </member>
+            <member>
+                <project>bootloader_xmega</project>
+                <configuration>atxmega32a4u-x4</configuration>
             </member>
         </batchDefinition>
     </batchBuild>

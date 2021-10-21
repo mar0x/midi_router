@@ -39,6 +39,7 @@
 
 #include "compiler.h"
 #include "nvm.h"
+#include "main.h"
 
 /* Redefine USB interrupt vectors base address to safe code space */
 # if defined(__GNUC__)
@@ -172,6 +173,7 @@
  */
 #define  UDC_VBUS_EVENT(b_vbus_high)      // NO VBUS EVENT on XMEGA
 #define  UDC_SOF_EVENT()                  main_sof_action()
+
 //@}
 
 //@}
