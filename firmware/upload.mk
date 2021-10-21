@@ -36,3 +36,15 @@ upload-test:
     -c avrispmkII \
     -p $(MCU) \
     -P usb
+
+DFU = $(PRJ_PATH)/bin/dfu-$(MCU)-$(BOARD).ihex
+
+upload-dfu:
+	$(AVRDUDE) -v \
+    -C $(AVRDUDE_CONF) \
+    -c avrispmkII \
+    -p $(MCU) \
+    -P usb \
+    -U flash:w:$(DFU):i \
+    -U fuse2:w:0xbf:m
+
