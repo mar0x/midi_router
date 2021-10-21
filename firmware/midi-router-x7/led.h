@@ -22,3 +22,5 @@ using led_tx3 = artl::digital_out<artl::port::A, 5>;
 using led_tx4 = artl::digital_out<artl::port::D, 1>;
 using led_tx5 = artl::digital_out<artl::port::D, 0>;
 using led_tx6 = artl::digital_out<artl::port::F, 5>;
+
+using oen = artl::digital_out<artl::port::K, 1>;

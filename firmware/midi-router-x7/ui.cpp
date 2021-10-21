@@ -83,6 +83,8 @@ void init(void)
     led_tx5::setup();
     led_tx6::setup();
 
+    oen::setup();
+
     btn_in::setup();
 
     TCD2.INTCTRLA |= TC2_HUNFINTLVL_HI_gc; // enable HIGH underflow interrupt, pri level 3 (see 15.10.5 in AU manual)
