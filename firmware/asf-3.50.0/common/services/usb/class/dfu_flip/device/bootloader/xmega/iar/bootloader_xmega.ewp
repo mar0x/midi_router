@@ -25,7 +25,7 @@
                 </option>
                 <option>
                     <name>ExePath</name>
-                    <state>atxmega128a1u-x2\Exe</state>
+                    <state>bin</state>
                 </option>
                 <option>
                     <name>ObjPath</name>
@@ -769,7 +769,7 @@
                 </option>
                 <option>
                     <name>OutputFile</name>
-                    <state>dfu_xmega128a1u_x2.hex</state>
+                    <state>dfu-atxmega128a1u-midi-router-x2.ihex</state>
                 </option>
                 <option>
                     <name>OutputFormat</name>
@@ -1117,7 +1117,7 @@
                 </option>
                 <option>
                     <name>ExePath</name>
-                    <state>atxmega128a1u-x7\Exe</state>
+                    <state>bin</state>
                 </option>
                 <option>
                     <name>ObjPath</name>
@@ -1861,7 +1861,7 @@
                 </option>
                 <option>
                     <name>OutputFile</name>
-                    <state>dfu_xmega128a1u_x7.hex</state>
+                    <state>dfu-atxmega128a1u-midi-router-x7.ihex</state>
                 </option>
                 <option>
                     <name>OutputFormat</name>
@@ -2209,7 +2209,7 @@
                 </option>
                 <option>
                     <name>ExePath</name>
-                    <state>atxmega128a4u-x4\Exe</state>
+                    <state>bin</state>
                 </option>
                 <option>
                     <name>ObjPath</name>
@@ -2953,7 +2953,7 @@
                 </option>
                 <option>
                     <name>OutputFile</name>
-                    <state>dfu_xmega128a4u_x4.hex</state>
+                    <state>dfu-atxmega128a4u-midi-router-x4.ihex</state>
                 </option>
                 <option>
                     <name>OutputFormat</name>
@@ -3301,7 +3301,7 @@
                 </option>
                 <option>
                     <name>ExePath</name>
-                    <state>atxmega32a4u-x4\Exe</state>
+                    <state>bin</state>
                 </option>
                 <option>
                     <name>ObjPath</name>
@@ -4045,7 +4045,7 @@
                 </option>
                 <option>
                     <name>OutputFile</name>
-                    <state>dfu_xmega32a4u_x4.hex</state>
+                    <state>dfu-atxmega32a4u-midi-router-x4.ihex</state>
                 </option>
                 <option>
                     <name>OutputFormat</name>
