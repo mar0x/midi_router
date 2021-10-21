@@ -574,6 +574,7 @@
                 <option>
                     <name>ADefines</name>
                     <state>BOARD=DUMMY_BOARD</state>
+                    <state>MIDI_ROUTER_X2</state>
                 </option>
                 <option>
                     <name>MacroChars</name>
@@ -1665,6 +1666,7 @@
                 <option>
                     <name>ADefines</name>
                     <state>BOARD=DUMMY_BOARD</state>
+                    <state>MIDI_ROUTER_X7</state>
                 </option>
                 <option>
                     <name>MacroChars</name>
@@ -2756,6 +2758,7 @@
                 <option>
                     <name>ADefines</name>
                     <state>BOARD=DUMMY_BOARD</state>
+                    <state>MIDI_ROUTER_X4</state>
                 </option>
                 <option>
                     <name>MacroChars</name>
@@ -3847,6 +3850,7 @@
                 <option>
                     <name>ADefines</name>
                     <state>BOARD=DUMMY_BOARD</state>
+                    <state>MIDI_ROUTER_X4</state>
                 </option>
                 <option>
                     <name>MacroChars</name>

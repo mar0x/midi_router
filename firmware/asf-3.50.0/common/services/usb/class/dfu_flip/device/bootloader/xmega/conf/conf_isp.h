@@ -69,10 +69,10 @@
 # define ISP_PORT_IN       PORTC_IN
 # define ISP_PORT_PIN      2
 #elif defined(MIDI_ROUTER_X7)
-# define ISP_PORT_DIR      PORTC_DIR
-# define ISP_PORT_PINCTRL  PORTC_PIN3CTRL
-# define ISP_PORT_IN       PORTC_IN
-# define ISP_PORT_PIN      3
+# define ISP_PORT_DIR      PORTA_DIR
+# define ISP_PORT_PINCTRL  PORTA_PIN1CTRL
+# define ISP_PORT_IN       PORTA_IN
+# define ISP_PORT_PIN      1
 #else
 # define ISP_PORT_DIR      PORTF_DIR
 # define ISP_PORT_PINCTRL  PORTF_PIN5CTRL
