@@ -1,5 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project>
-    <fileVersion>2</fileVersion>
+    <fileVersion>3</fileVersion>
     <configuration>
         <name>Debug</name>
         <toolchain>
@@ -8,11 +9,35 @@
         <debug>1</debug>
         <settings>
             <name>C-SPY</name>
-            <archiveVersion>5</archiveVersion>
+            <archiveVersion>6</archiveVersion>
             <data>
-                <version>14</version>
+                <version>16</version>
                 <wantNonLocal>1</wantNonLocal>
                 <debug>1</debug>
+                <option>
+                    <name>OCImagesOffset1</name>
+                    <state></state>
+                </option>
+                <option>
+                    <name>OCImagesOffset2</name>
+                    <state></state>
+                </option>
+                <option>
+                    <name>OCImagesOffset3</name>
+                    <state></state>
+                </option>
+                <option>
+                    <name>OCImagesUse1</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OCImagesUse2</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OCImagesUse3</name>
+                    <state>0</state>
+                </option>
                 <option>
                     <name>CSVariantProcessor</name>
                     <state>0</state>
@@ -27,7 +52,7 @@
                 </option>
                 <option>
                     <name>DDFile</name>
-                    <state></state>
+                    <state>$TOOLKIT_DIR$\Config\ioxm128a1u.ddf</state>
                 </option>
                 <option>
                     <name>CInput</name>
@@ -104,10 +129,140 @@
             </data>
         </settings>
         <settings>
-            <name>AVRONE</name>
-            <archiveVersion>3</archiveVersion>
+            <name>ATMELICEAVR</name>
+            <archiveVersion>7</archiveVersion>
             <data>
-                <version>3</version>
+                <version>4</version>
+                <wantNonLocal>1</wantNonLocal>
+                <debug>1</debug>
+                <option>
+                    <name>OATMELICEDriver</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>OATMELICEExtraOptions</name>
+                    <state></state>
+                </option>
+                <option>
+                    <name>OATMELICEExtraOptionsCheck</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEDoLogfile</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICELogFile</name>
+                    <state>$PROJ_DIR$\cspycomm.log</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagIceSuppLoad</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagIceConsCheck</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagIceJtagFreqRadio</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagIceJtagFreqManually</name>
+                    <state>100</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagIceJtagFreq</name>
+                    <version>0</version>
+                    <state>8</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagIceJtagDeviceBefore</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagIceJtagDeviceAfter</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagIceJtagInstrBitsBefore</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagIceJtagInstrBitsAfter</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagIceDaisyChain</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagDebugTimers</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagDebugEeprom</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagDebugFuses</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagIcedownloadToData</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagSoftwareBreak</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>ExitBreakpointP7</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>PutcharBreakpointP7</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>GetcharBreakpointP7</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>OATMELICECommunication</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICECommunicationUsbEditId</name>
+                    <state></state>
+                </option>
+                <option>
+                    <name>OATMELICEDebugPort</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEDebugWireDebugPort</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>OATMELICEAVRJtagIcePreserveFlash</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICETPIDebugPort</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>OATMELICEUPDIDebugPort</name>
+                    <state>1</state>
+                </option>
+            </data>
+        </settings>
+        <settings>
+            <name>AVRONE</name>
+            <archiveVersion>4</archiveVersion>
+            <data>
+                <version>4</version>
                 <wantNonLocal>1</wantNonLocal>
                 <debug>1</debug>
                 <option>
@@ -223,313 +378,98 @@
                     <name>OAVRONEDebugWireDebugPort</name>
                     <state>1</state>
                 </option>
-            </data>
-        </settings>
-        <settings>
-            <name>CCRAVR</name>
-            <archiveVersion>2</archiveVersion>
-            <data>
-                <version>1</version>
-                <wantNonLocal>1</wantNonLocal>
-                <debug>1</debug>
                 <option>
-                    <name>OCCRAVRDriver</name>
-                    <state>1</state>
-                </option>
-                <option>
-                    <name>OCCRAVRExtraOptions</name>
-                    <state></state>
-                </option>
-                <option>
-                    <name>OCCRAVRExtraOptionsCheck</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OCCRAVRPort</name>
-                    <version>0</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OCCRAVRBaud</name>
-                    <version>0</version>
-                    <state>5</state>
-                </option>
-                <option>
-                    <name>OCCRAVRParity</name>
-                    <version>0</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OCCRAVRDataBits</name>
-                    <version>0</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OCCRAVRStopBits</name>
-                    <version>0</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OCCRAVRHandshake</name>
-                    <version>0</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OCCRAVRAllComm</name>
-                    <state>1</state>
-                </option>
-                <option>
-                    <name>OCCRAVRDoLogfile</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OCCRAVRLogFile</name>
-                    <state>cspycomm.log</state>
-                </option>
-                <option>
-                    <name>OCCRAVRSuppressLoad</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OCCRAVRFastDownload</name>
-                    <state>1</state>
-                </option>
-                <option>
-                    <name>OCCRAVRTargetCCheck</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OCCRAVRdownloadToData</name>
+                    <name>OAVRONEAVRJtagIcePreserveFlash</name>
                     <state>0</state>
                 </option>
             </data>
         </settings>
         <settings>
-            <name>ICE200AVR</name>
-            <archiveVersion>2</archiveVersion>
+            <name>JTAGICE3AVR</name>
+            <archiveVersion>6</archiveVersion>
             <data>
-                <version>1</version>
+                <version>7</version>
                 <wantNonLocal>1</wantNonLocal>
                 <debug>1</debug>
                 <option>
-                    <name>OICE200AVRDriver</name>
+                    <name>OJTAGICE3Driver</name>
                     <state>1</state>
                 </option>
                 <option>
-                    <name>OICE200AVRExtraOptions</name>
+                    <name>OJTAGICE3ExtraOptions</name>
                     <state></state>
                 </option>
                 <option>
-                    <name>OICE200AVRExtraOptionsCheck</name>
+                    <name>OJTAGICE3ExtraOptionsCheck</name>
                     <state>0</state>
                 </option>
                 <option>
-                    <name>OICE200AVRPort</name>
-                    <version>0</version>
+                    <name>OJTAGICE3DoLogfile</name>
                     <state>0</state>
                 </option>
                 <option>
-                    <name>OICE200AVRBaud</name>
-                    <version>0</version>
-                    <state>5</state>
+                    <name>OJTAGICE3LogFile</name>
+                    <state>$PROJ_DIR$\cspycomm.log</state>
                 </option>
                 <option>
-                    <name>OICE200AVRParity</name>
-                    <version>0</version>
+                    <name>OJTAGICE3JtagIceSuppLoad</name>
                     <state>0</state>
                 </option>
                 <option>
-                    <name>OICE200AVRDataBits</name>
-                    <version>0</version>
+                    <name>OJTAGICE3JtagIceConsCheck</name>
                     <state>0</state>
                 </option>
                 <option>
-                    <name>OICE200AVRStopBits</name>
-                    <version>0</version>
+                    <name>OJTAGICE3JtagIceJtagFreqRadio</name>
                     <state>0</state>
                 </option>
                 <option>
-                    <name>OICE200AVRHandshake</name>
+                    <name>OJTAGICE3JtagIceJtagFreqManually</name>
+                    <state>100</state>
+                </option>
+                <option>
+                    <name>OJTAGICE3JtagIceJtagFreq</name>
                     <version>0</version>
+                    <state>8</state>
+                </option>
+                <option>
+                    <name>OJTAGICE3JtagIceJtagDeviceBefore</name>
                     <state>0</state>
                 </option>
                 <option>
-                    <name>OICE200AVRAllComm</name>
+                    <name>OJTAGICE3JtagIceJtagDeviceAfter</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OJTAGICE3JtagIceJtagInstrBitsBefore</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OJTAGICE3JtagIceJtagInstrBitsAfter</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OJTAGICE3JtagIceDaisyChain</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OJTAGICE3JtagDebugTimers</name>
                     <state>1</state>
                 </option>
                 <option>
-                    <name>OICE200AVRDoLogfile</name>
+                    <name>OJTAGICE3JtagDebugEeprom</name>
                     <state>0</state>
                 </option>
                 <option>
-                    <name>OICE200AVRLogFile</name>
-                    <state>cspycomm.log</state>
-                </option>
-                <option>
-                    <name>OICE200AVRHighSpeed</name>
-                    <state>1</state>
-                </option>
-                <option>
-                    <name>OICE200AVRSingleStepTimers</name>
+                    <name>OJTAGICE3JtagDebugFuses</name>
                     <state>0</state>
                 </option>
                 <option>
-                    <name>OICE200AVRRestoreEEPROM</name>
+                    <name>OJTAGICE3JtagIcedownloadToData</name>
                     <state>0</state>
                 </option>
                 <option>
-                    <name>OICE200AVRComPort</name>
-                    <version>0</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OICE200AVRSuppLoad</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OICE200AVRConsCheck</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OICE200AVRIce200ResetDelayList</name>
-                    <version>8</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OICE200AVRIce200downloadToData</name>
-                    <state>0</state>
-                </option>
-            </data>
-        </settings>
-        <settings>
-            <name>JTAGICEAVR</name>
-            <archiveVersion>3</archiveVersion>
-            <data>
-                <version>2</version>
-                <wantNonLocal>1</wantNonLocal>
-                <debug>1</debug>
-                <option>
-                    <name>OJTAGICEAVRDriver</name>
-                    <state>1</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRExtraOptions</name>
-                    <state></state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRExtraOptionsCheck</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRPort</name>
-                    <version>0</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRBaud</name>
-                    <version>0</version>
-                    <state>5</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRParity</name>
-                    <version>0</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRDataBits</name>
-                    <version>0</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRStopBits</name>
-                    <version>0</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRHandshake</name>
-                    <version>0</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRAllComm</name>
-                    <state>1</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRDoLogfile</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRLogFile</name>
-                    <state>cspycomm.log</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIceDefaultCom</name>
-                    <state>1</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIceComPort</name>
-                    <version>0</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIceSuppLoad</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIceConsCheck</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIceJtagFreqRadio</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIceJtagFreqManually</name>
-                    <state>100000</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIceJtagFreq</name>
-                    <version>0</version>
-                    <state>5</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIceJtagDeviceBefore</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIceJtagDeviceAfter</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIceJtagInstrBitsBefore</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIceJtagInstrBitsAfter</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIceDaisyChain</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagDebugTimers</name>
-                    <state>1</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagDebugEeprom</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagDebugReset</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagDebugFuses</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIcedownloadToData</name>
+                    <name>OJTAGICE3JtagSoftwareBreak</name>
                     <state>0</state>
                 </option>
                 <option>
@@ -544,13 +484,33 @@
                     <name>GetcharBreakpointP7</name>
                     <state>1</state>
                 </option>
+                <option>
+                    <name>OJTAGICE3Communication</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OJTAGICE3CommunicationUsbEditId</name>
+                    <state></state>
+                </option>
+                <option>
+                    <name>OJTAGICE3DebugPort</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OJTAGICE3DebugWireDebugPort</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>OJTAGICE3AVRJtagIcePreserveFlash</name>
+                    <state>0</state>
+                </option>
             </data>
         </settings>
         <settings>
             <name>JTAGICEMKIIAVR</name>
-            <archiveVersion>4</archiveVersion>
+            <archiveVersion>5</archiveVersion>
             <data>
-                <version>6</version>
+                <version>7</version>
                 <wantNonLocal>1</wantNonLocal>
                 <debug>1</debug>
                 <option>
@@ -709,13 +669,17 @@
                     <name>OJTAGICEMKIIOnlyPDI</name>
                     <state>1</state>
                 </option>
+                <option>
+                    <name>OJTAGICEMKIIAVRJtagIcePreserveFlash</name>
+                    <state>0</state>
+                </option>
             </data>
         </settings>
         <settings>
             <name>DRAGONAVR</name>
-            <archiveVersion>2</archiveVersion>
+            <archiveVersion>3</archiveVersion>
             <data>
-                <version>2</version>
+                <version>3</version>
                 <wantNonLocal>1</wantNonLocal>
                 <debug>1</debug>
                 <option>
@@ -831,6 +795,140 @@
                     <name>ODRAGONOnlyPDI</name>
                     <state>1</state>
                 </option>
+                <option>
+                    <name>ODRAGONAVRJtagIcePreserveFlash</name>
+                    <state>0</state>
+                </option>
+            </data>
+        </settings>
+        <settings>
+            <name>POWERDEBUGGERAVR</name>
+            <archiveVersion>7</archiveVersion>
+            <data>
+                <version>4</version>
+                <wantNonLocal>1</wantNonLocal>
+                <debug>1</debug>
+                <option>
+                    <name>OPOWERDEBUGGERDriver</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERExtraOptions</name>
+                    <state></state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERExtraOptionsCheck</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERDoLogfile</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERLogFile</name>
+                    <state>$PROJ_DIR$\cspycomm.log</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagIceSuppLoad</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagIceConsCheck</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagIceJtagFreqRadio</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagIceJtagFreqManually</name>
+                    <state>100</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagIceJtagFreq</name>
+                    <version>0</version>
+                    <state>8</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagIceJtagDeviceBefore</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagIceJtagDeviceAfter</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagIceJtagInstrBitsBefore</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagIceJtagInstrBitsAfter</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagIceDaisyChain</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagDebugTimers</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagDebugEeprom</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagDebugFuses</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagIcedownloadToData</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagSoftwareBreak</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>ExitBreakpointP7</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>PutcharBreakpointP7</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>GetcharBreakpointP7</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERCommunication</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERCommunicationUsbEditId</name>
+                    <state></state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERDebugPort</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERDebugWireDebugPort</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERAVRJtagIcePreserveFlash</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERTPIDebugPort</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERUPDIDebugPort</name>
+                    <state>1</state>
+                </option>
             </data>
         </settings>
         <settings>
@@ -897,11 +995,27 @@
         </settings>
         <debuggerPlugins>
             <plugin>
+                <file>$TOOLKIT_DIR$\plugins\rtos\OpenRTOS\OpenRTOSPlugin.ewplugin</file>
+                <loadFlag>0</loadFlag>
+            </plugin>
+            <plugin>
+                <file>$TOOLKIT_DIR$\plugins\rtos\SafeRTOS\SafeRTOSPlugin.ewplugin</file>
+                <loadFlag>0</loadFlag>
+            </plugin>
+            <plugin>
+                <file>$TOOLKIT_DIR$\plugins\rtos\uCOS-II\uCOS-II-286-KA-CSpy.ewplugin</file>
+                <loadFlag>0</loadFlag>
+            </plugin>
+            <plugin>
                 <file>$TOOLKIT_DIR$\plugins\rtos\uCOS-II\uCOS-II-KA-CSpy.ewplugin</file>
                 <loadFlag>0</loadFlag>
             </plugin>
             <plugin>
-                <file>$EW_DIR$\common\plugins\CodeCoverage\CodeCoverage.ENU.ewplugin</file>
+                <file>$TOOLKIT_DIR$\plugins\rtos\uCOS-III\uCOS-III-KA-CSpy.ewplugin</file>
+                <loadFlag>0</loadFlag>
+            </plugin>
+            <plugin>
+                <file>$TOOLKIT_DIR$\plugins\Stk600\Stk600Plugin.ewplugin</file>
                 <loadFlag>1</loadFlag>
             </plugin>
             <plugin>
@@ -909,16 +1023,12 @@
                 <loadFlag>0</loadFlag>
             </plugin>
             <plugin>
-                <file>$EW_DIR$\common\plugins\Profiling\Profiling.ENU.ewplugin</file>
-                <loadFlag>1</loadFlag>
+                <file>$EW_DIR$\common\plugins\TargetAccessServer\TargetAccessServer.ENU.ewplugin</file>
+                <loadFlag>0</loadFlag>
             </plugin>
             <plugin>
-                <file>$EW_DIR$\common\plugins\Stack\Stack.ENU.ewplugin</file>
-                <loadFlag>1</loadFlag>
-            </plugin>
-            <plugin>
-                <file>$EW_DIR$\common\plugins\SymList\SymList.ENU.ewplugin</file>
-                <loadFlag>1</loadFlag>
+                <file>$EW_DIR$\common\plugins\uCProbe\uCProbePlugin.ENU.ewplugin</file>
+                <loadFlag>0</loadFlag>
             </plugin>
         </debuggerPlugins>
     </configuration>
@@ -930,11 +1040,35 @@
         <debug>0</debug>
         <settings>
             <name>C-SPY</name>
-            <archiveVersion>5</archiveVersion>
+            <archiveVersion>6</archiveVersion>
             <data>
-                <version>14</version>
+                <version>16</version>
                 <wantNonLocal>1</wantNonLocal>
                 <debug>0</debug>
+                <option>
+                    <name>OCImagesOffset1</name>
+                    <state></state>
+                </option>
+                <option>
+                    <name>OCImagesOffset2</name>
+                    <state></state>
+                </option>
+                <option>
+                    <name>OCImagesOffset3</name>
+                    <state></state>
+                </option>
+                <option>
+                    <name>OCImagesUse1</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OCImagesUse2</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OCImagesUse3</name>
+                    <state>0</state>
+                </option>
                 <option>
                     <name>CSVariantProcessor</name>
                     <state>0</state>
@@ -949,7 +1083,7 @@
                 </option>
                 <option>
                     <name>DDFile</name>
-                    <state></state>
+                    <state>$TOOLKIT_DIR$\Config\ioxm128a1u.ddf</state>
                 </option>
                 <option>
                     <name>CInput</name>
@@ -1026,10 +1160,140 @@
             </data>
         </settings>
         <settings>
-            <name>AVRONE</name>
-            <archiveVersion>3</archiveVersion>
+            <name>ATMELICEAVR</name>
+            <archiveVersion>7</archiveVersion>
             <data>
-                <version>3</version>
+                <version>4</version>
+                <wantNonLocal>1</wantNonLocal>
+                <debug>0</debug>
+                <option>
+                    <name>OATMELICEDriver</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>OATMELICEExtraOptions</name>
+                    <state></state>
+                </option>
+                <option>
+                    <name>OATMELICEExtraOptionsCheck</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEDoLogfile</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICELogFile</name>
+                    <state>$PROJ_DIR$\cspycomm.log</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagIceSuppLoad</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagIceConsCheck</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagIceJtagFreqRadio</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagIceJtagFreqManually</name>
+                    <state>100</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagIceJtagFreq</name>
+                    <version>0</version>
+                    <state>8</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagIceJtagDeviceBefore</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagIceJtagDeviceAfter</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagIceJtagInstrBitsBefore</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagIceJtagInstrBitsAfter</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagIceDaisyChain</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagDebugTimers</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagDebugEeprom</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagDebugFuses</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagIcedownloadToData</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEJtagSoftwareBreak</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>ExitBreakpointP7</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>PutcharBreakpointP7</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>GetcharBreakpointP7</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>OATMELICECommunication</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICECommunicationUsbEditId</name>
+                    <state></state>
+                </option>
+                <option>
+                    <name>OATMELICEDebugPort</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICEDebugWireDebugPort</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>OATMELICEAVRJtagIcePreserveFlash</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OATMELICETPIDebugPort</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>OATMELICEUPDIDebugPort</name>
+                    <state>1</state>
+                </option>
+            </data>
+        </settings>
+        <settings>
+            <name>AVRONE</name>
+            <archiveVersion>4</archiveVersion>
+            <data>
+                <version>4</version>
                 <wantNonLocal>1</wantNonLocal>
                 <debug>0</debug>
                 <option>
@@ -1145,313 +1409,98 @@
                     <name>OAVRONEDebugWireDebugPort</name>
                     <state>1</state>
                 </option>
-            </data>
-        </settings>
-        <settings>
-            <name>CCRAVR</name>
-            <archiveVersion>2</archiveVersion>
-            <data>
-                <version>1</version>
-                <wantNonLocal>1</wantNonLocal>
-                <debug>0</debug>
                 <option>
-                    <name>OCCRAVRDriver</name>
-                    <state>1</state>
-                </option>
-                <option>
-                    <name>OCCRAVRExtraOptions</name>
-                    <state></state>
-                </option>
-                <option>
-                    <name>OCCRAVRExtraOptionsCheck</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OCCRAVRPort</name>
-                    <version>0</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OCCRAVRBaud</name>
-                    <version>0</version>
-                    <state>5</state>
-                </option>
-                <option>
-                    <name>OCCRAVRParity</name>
-                    <version>0</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OCCRAVRDataBits</name>
-                    <version>0</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OCCRAVRStopBits</name>
-                    <version>0</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OCCRAVRHandshake</name>
-                    <version>0</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OCCRAVRAllComm</name>
-                    <state>1</state>
-                </option>
-                <option>
-                    <name>OCCRAVRDoLogfile</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OCCRAVRLogFile</name>
-                    <state>cspycomm.log</state>
-                </option>
-                <option>
-                    <name>OCCRAVRSuppressLoad</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OCCRAVRFastDownload</name>
-                    <state>1</state>
-                </option>
-                <option>
-                    <name>OCCRAVRTargetCCheck</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OCCRAVRdownloadToData</name>
+                    <name>OAVRONEAVRJtagIcePreserveFlash</name>
                     <state>0</state>
                 </option>
             </data>
         </settings>
         <settings>
-            <name>ICE200AVR</name>
-            <archiveVersion>2</archiveVersion>
+            <name>JTAGICE3AVR</name>
+            <archiveVersion>6</archiveVersion>
             <data>
-                <version>1</version>
+                <version>7</version>
                 <wantNonLocal>1</wantNonLocal>
                 <debug>0</debug>
                 <option>
-                    <name>OICE200AVRDriver</name>
+                    <name>OJTAGICE3Driver</name>
                     <state>1</state>
                 </option>
                 <option>
-                    <name>OICE200AVRExtraOptions</name>
+                    <name>OJTAGICE3ExtraOptions</name>
                     <state></state>
                 </option>
                 <option>
-                    <name>OICE200AVRExtraOptionsCheck</name>
+                    <name>OJTAGICE3ExtraOptionsCheck</name>
                     <state>0</state>
                 </option>
                 <option>
-                    <name>OICE200AVRPort</name>
-                    <version>0</version>
+                    <name>OJTAGICE3DoLogfile</name>
                     <state>0</state>
                 </option>
                 <option>
-                    <name>OICE200AVRBaud</name>
-                    <version>0</version>
-                    <state>5</state>
+                    <name>OJTAGICE3LogFile</name>
+                    <state>$PROJ_DIR$\cspycomm.log</state>
                 </option>
                 <option>
-                    <name>OICE200AVRParity</name>
-                    <version>0</version>
+                    <name>OJTAGICE3JtagIceSuppLoad</name>
                     <state>0</state>
                 </option>
                 <option>
-                    <name>OICE200AVRDataBits</name>
-                    <version>0</version>
+                    <name>OJTAGICE3JtagIceConsCheck</name>
                     <state>0</state>
                 </option>
                 <option>
-                    <name>OICE200AVRStopBits</name>
-                    <version>0</version>
+                    <name>OJTAGICE3JtagIceJtagFreqRadio</name>
                     <state>0</state>
                 </option>
                 <option>
-                    <name>OICE200AVRHandshake</name>
+                    <name>OJTAGICE3JtagIceJtagFreqManually</name>
+                    <state>100</state>
+                </option>
+                <option>
+                    <name>OJTAGICE3JtagIceJtagFreq</name>
                     <version>0</version>
+                    <state>8</state>
+                </option>
+                <option>
+                    <name>OJTAGICE3JtagIceJtagDeviceBefore</name>
                     <state>0</state>
                 </option>
                 <option>
-                    <name>OICE200AVRAllComm</name>
+                    <name>OJTAGICE3JtagIceJtagDeviceAfter</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OJTAGICE3JtagIceJtagInstrBitsBefore</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OJTAGICE3JtagIceJtagInstrBitsAfter</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OJTAGICE3JtagIceDaisyChain</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OJTAGICE3JtagDebugTimers</name>
                     <state>1</state>
                 </option>
                 <option>
-                    <name>OICE200AVRDoLogfile</name>
+                    <name>OJTAGICE3JtagDebugEeprom</name>
                     <state>0</state>
                 </option>
                 <option>
-                    <name>OICE200AVRLogFile</name>
-                    <state>cspycomm.log</state>
-                </option>
-                <option>
-                    <name>OICE200AVRHighSpeed</name>
-                    <state>1</state>
-                </option>
-                <option>
-                    <name>OICE200AVRSingleStepTimers</name>
+                    <name>OJTAGICE3JtagDebugFuses</name>
                     <state>0</state>
                 </option>
                 <option>
-                    <name>OICE200AVRRestoreEEPROM</name>
+                    <name>OJTAGICE3JtagIcedownloadToData</name>
                     <state>0</state>
                 </option>
                 <option>
-                    <name>OICE200AVRComPort</name>
-                    <version>0</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OICE200AVRSuppLoad</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OICE200AVRConsCheck</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OICE200AVRIce200ResetDelayList</name>
-                    <version>8</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OICE200AVRIce200downloadToData</name>
-                    <state>0</state>
-                </option>
-            </data>
-        </settings>
-        <settings>
-            <name>JTAGICEAVR</name>
-            <archiveVersion>3</archiveVersion>
-            <data>
-                <version>2</version>
-                <wantNonLocal>1</wantNonLocal>
-                <debug>0</debug>
-                <option>
-                    <name>OJTAGICEAVRDriver</name>
-                    <state>1</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRExtraOptions</name>
-                    <state></state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRExtraOptionsCheck</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRPort</name>
-                    <version>0</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRBaud</name>
-                    <version>0</version>
-                    <state>5</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRParity</name>
-                    <version>0</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRDataBits</name>
-                    <version>0</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRStopBits</name>
-                    <version>0</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRHandshake</name>
-                    <version>0</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRAllComm</name>
-                    <state>1</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRDoLogfile</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRLogFile</name>
-                    <state>cspycomm.log</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIceDefaultCom</name>
-                    <state>1</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIceComPort</name>
-                    <version>0</version>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIceSuppLoad</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIceConsCheck</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIceJtagFreqRadio</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIceJtagFreqManually</name>
-                    <state>100000</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIceJtagFreq</name>
-                    <version>0</version>
-                    <state>5</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIceJtagDeviceBefore</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIceJtagDeviceAfter</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIceJtagInstrBitsBefore</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIceJtagInstrBitsAfter</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIceDaisyChain</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagDebugTimers</name>
-                    <state>1</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagDebugEeprom</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagDebugReset</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagDebugFuses</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>OJTAGICEAVRJtagIcedownloadToData</name>
+                    <name>OJTAGICE3JtagSoftwareBreak</name>
                     <state>0</state>
                 </option>
                 <option>
@@ -1466,13 +1515,33 @@
                     <name>GetcharBreakpointP7</name>
                     <state>1</state>
                 </option>
+                <option>
+                    <name>OJTAGICE3Communication</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OJTAGICE3CommunicationUsbEditId</name>
+                    <state></state>
+                </option>
+                <option>
+                    <name>OJTAGICE3DebugPort</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OJTAGICE3DebugWireDebugPort</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>OJTAGICE3AVRJtagIcePreserveFlash</name>
+                    <state>0</state>
+                </option>
             </data>
         </settings>
         <settings>
             <name>JTAGICEMKIIAVR</name>
-            <archiveVersion>4</archiveVersion>
+            <archiveVersion>5</archiveVersion>
             <data>
-                <version>6</version>
+                <version>7</version>
                 <wantNonLocal>1</wantNonLocal>
                 <debug>0</debug>
                 <option>
@@ -1631,13 +1700,17 @@
                     <name>OJTAGICEMKIIOnlyPDI</name>
                     <state>1</state>
                 </option>
+                <option>
+                    <name>OJTAGICEMKIIAVRJtagIcePreserveFlash</name>
+                    <state>0</state>
+                </option>
             </data>
         </settings>
         <settings>
             <name>DRAGONAVR</name>
-            <archiveVersion>2</archiveVersion>
+            <archiveVersion>3</archiveVersion>
             <data>
-                <version>2</version>
+                <version>3</version>
                 <wantNonLocal>1</wantNonLocal>
                 <debug>0</debug>
                 <option>
@@ -1753,6 +1826,140 @@
                     <name>ODRAGONOnlyPDI</name>
                     <state>1</state>
                 </option>
+                <option>
+                    <name>ODRAGONAVRJtagIcePreserveFlash</name>
+                    <state>0</state>
+                </option>
+            </data>
+        </settings>
+        <settings>
+            <name>POWERDEBUGGERAVR</name>
+            <archiveVersion>7</archiveVersion>
+            <data>
+                <version>4</version>
+                <wantNonLocal>1</wantNonLocal>
+                <debug>0</debug>
+                <option>
+                    <name>OPOWERDEBUGGERDriver</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERExtraOptions</name>
+                    <state></state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERExtraOptionsCheck</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERDoLogfile</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERLogFile</name>
+                    <state>$PROJ_DIR$\cspycomm.log</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagIceSuppLoad</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagIceConsCheck</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagIceJtagFreqRadio</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagIceJtagFreqManually</name>
+                    <state>100</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagIceJtagFreq</name>
+                    <version>0</version>
+                    <state>8</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagIceJtagDeviceBefore</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagIceJtagDeviceAfter</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagIceJtagInstrBitsBefore</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagIceJtagInstrBitsAfter</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagIceDaisyChain</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagDebugTimers</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagDebugEeprom</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagDebugFuses</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagIcedownloadToData</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERJtagSoftwareBreak</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>ExitBreakpointP7</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>PutcharBreakpointP7</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>GetcharBreakpointP7</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERCommunication</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERCommunicationUsbEditId</name>
+                    <state></state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERDebugPort</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERDebugWireDebugPort</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERAVRJtagIcePreserveFlash</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERTPIDebugPort</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>OPOWERDEBUGGERUPDIDebugPort</name>
+                    <state>1</state>
+                </option>
             </data>
         </settings>
         <settings>
@@ -1819,11 +2026,27 @@
         </settings>
         <debuggerPlugins>
             <plugin>
+                <file>$TOOLKIT_DIR$\plugins\rtos\OpenRTOS\OpenRTOSPlugin.ewplugin</file>
+                <loadFlag>0</loadFlag>
+            </plugin>
+            <plugin>
+                <file>$TOOLKIT_DIR$\plugins\rtos\SafeRTOS\SafeRTOSPlugin.ewplugin</file>
+                <loadFlag>0</loadFlag>
+            </plugin>
+            <plugin>
+                <file>$TOOLKIT_DIR$\plugins\rtos\uCOS-II\uCOS-II-286-KA-CSpy.ewplugin</file>
+                <loadFlag>0</loadFlag>
+            </plugin>
+            <plugin>
                 <file>$TOOLKIT_DIR$\plugins\rtos\uCOS-II\uCOS-II-KA-CSpy.ewplugin</file>
                 <loadFlag>0</loadFlag>
             </plugin>
             <plugin>
-                <file>$EW_DIR$\common\plugins\CodeCoverage\CodeCoverage.ENU.ewplugin</file>
+                <file>$TOOLKIT_DIR$\plugins\rtos\uCOS-III\uCOS-III-KA-CSpy.ewplugin</file>
+                <loadFlag>0</loadFlag>
+            </plugin>
+            <plugin>
+                <file>$TOOLKIT_DIR$\plugins\Stk600\Stk600Plugin.ewplugin</file>
                 <loadFlag>1</loadFlag>
             </plugin>
             <plugin>
@@ -1831,16 +2054,12 @@
                 <loadFlag>0</loadFlag>
             </plugin>
             <plugin>
-                <file>$EW_DIR$\common\plugins\Profiling\Profiling.ENU.ewplugin</file>
-                <loadFlag>1</loadFlag>
+                <file>$EW_DIR$\common\plugins\TargetAccessServer\TargetAccessServer.ENU.ewplugin</file>
+                <loadFlag>0</loadFlag>
             </plugin>
             <plugin>
-                <file>$EW_DIR$\common\plugins\Stack\Stack.ENU.ewplugin</file>
-                <loadFlag>1</loadFlag>
-            </plugin>
-            <plugin>
-                <file>$EW_DIR$\common\plugins\SymList\SymList.ENU.ewplugin</file>
-                <loadFlag>1</loadFlag>
+                <file>$EW_DIR$\common\plugins\uCProbe\uCProbePlugin.ENU.ewplugin</file>
+                <loadFlag>0</loadFlag>
             </plugin>
         </debuggerPlugins>
     </configuration>

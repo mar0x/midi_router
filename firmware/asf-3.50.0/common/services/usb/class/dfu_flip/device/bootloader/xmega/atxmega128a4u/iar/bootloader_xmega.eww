@@ -1,6 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <workspace>
-    <batchBuild></batchBuild>
     <project>
         <path>$WS_DIR$\bootloader_xmega.ewp</path>
     </project>
+    <batchBuild>
+        <batchDefinition>
+            <name>All</name>
+            <member>
+                <project>bootloader_xmega</project>
+                <configuration>Debug</configuration>
+            </member>
+            <member>
+                <project>bootloader_xmega</project>
+                <configuration>Release</configuration>
+            </member>
+        </batchDefinition>
+    </batchBuild>
 </workspace>
