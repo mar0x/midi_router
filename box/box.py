@@ -3,8 +3,8 @@
 import cadquery as cq
 import math
 
-midi_sock_count = 7
-#midi_sock_count = 4
+#midi_sock_count = 7
+midi_sock_count = 4
 #midi_sock_count = 1
 
 if midi_sock_count == 7:
@@ -25,6 +25,7 @@ if midi_sock_count == 7:
     base_stand_hole_d = 3.2
     base_stand_h = 3
 
+    cover_stand_d = base_stand_d
     cover_stand_d1 = 10
     cover_edge_height = 4
     cover_stand_hole_d = 2.5
@@ -48,20 +49,21 @@ if midi_sock_count == 4:
     board_length = 96
     board_width = 50
     board_thickness = 1.2
-    board_clearance = 0.3
+    board_clearance = 0.6
     board_corner_r = 3
     fillet_r = 3
 
     box_inner_height = 33
     box_thickness = 2
 
-    base_stand_d = 6
-    screw_cup_hole_d = 4.5
+    base_stand_d = 8
+    screw_cup_hole_d = 5.5
     base_edge_height = 1
 
-    base_stand_hole_d = 2.6
+    base_stand_hole_d = 3.0
     base_stand_h = 3
 
+    cover_stand_d = 6
     cover_stand_d1 = 8
     cover_edge_height = 1
     cover_stand_hole_d = 2
@@ -100,6 +102,7 @@ if midi_sock_count == 1:
     base_stand_hole_d = 2.2
     base_stand_h = 3
 
+    cover_stand_d = base_stand_d
     cover_stand_d1 = 8
     cover_edge_height = 1
     cover_stand_hole_d = 1.5
@@ -127,7 +130,6 @@ box_outer_length = box_inner_length + 2 * box_thickness
 box_outer_width = box_inner_width + 2 * box_thickness
 
 cover_stand_h = box_inner_height + 1 - base_stand_h - board_thickness
-cover_stand_d = base_stand_d
 
 edge_center_shift = (stand_x_step / 2) ** 2 + (stand_y_step / 2)  ** 2 - (central_stand_x_step / 2) ** 2
 edge_center_shift = edge_center_shift / stand_y_step
@@ -225,9 +227,6 @@ cover = cq.Workplane("XY").rect(box_outer_length, box_outer_width) \
         .faces("<Z").shell(-box_thickness) \
         .translate((0, 0, box_thickness - fillet_r))
 
-if hasattr(cq.Workplane, 'text'):
-    cover = cover.faces(">Z").workplane().text("MIDI-Lab Router", 10, -1, combine=True, kind="bold")
-
 # cover stands
 stands = cq.Workplane("XY").rect(box_inner_length + 2 * cover_stand_d1, box_inner_width + 2 * cover_stand_d1) \
         .extrude(1)
@@ -269,11 +268,6 @@ e2 = cq.Workplane("XY") \
 stands = stands.union(e1).union(e2).intersect(i)
 
 cover = cover.union(stands).union(cover_rim)
-
-logo = cq.importers.importStep('/Users/max_romanov/projects/midi_router/MIDI-Lab-1-Extrude.step')
-logo = logo.union(logo).translate((-15, 15, box_thickness - 0.9))
-
-cover = cover.cut(logo)
 
 # move the cover up
 cover = cover.translate((0, 0, box_inner_height * 2))
