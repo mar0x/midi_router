@@ -333,7 +333,7 @@ struct uart_t {
     }
 
     static uint8_t write_buf(const void *d, uint8_t s) {
-        if (s == 1 && rx_ring.empty() && dre()) {
+        if (s == 1 && tx_ring.empty() && dre()) {
             data(* (const uint8_t *) d);
 
             return 1;

@@ -227,7 +227,7 @@ ISR(USARTE1_RXC_vect)
 
 ISR(USARTE1_DRE_vect)
 {
-    uart_e0::on_dre_int();
+    uart_e1::on_dre_int();
 }
 
 
@@ -255,5 +255,5 @@ ISR(USARTF1_RXC_vect)
 
 ISR(USARTF1_DRE_vect)
 {
-    uart_f0::on_dre_int();
+    uart_f1::on_dre_int();
 }

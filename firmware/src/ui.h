@@ -62,6 +62,8 @@ void rst_blink();
 
 void rx_blink(uint8_t port);
 void tx_blink(uint8_t port);
+void rx_usb_blink();
+void tx_usb_blink();
 void tx_blink();
 
 void usb_midi_enable();

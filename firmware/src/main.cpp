@@ -308,7 +308,7 @@ bool midi_dispatch(const usb_midi_event_t &ev) {
 
 static void usb_midi_received(udd_ep_status_t status, iram_size_t n, udd_ep_id_t ep)
 {
-    if (n > 0) { ui::rx_blink(4); }
+    if (n > 0) { ui::rx_usb_blink(); }
 
     if (main_b_cdc_dtr) {
         cdc_print(millis());
@@ -443,7 +443,7 @@ static void usb_midi_dispatch(const midi_cmd_t& c, uint8_t jack)
         cdc_print_eol();
     }
 
-    ui::tx_blink(4);
+    ui::tx_usb_blink();
 
     udd_ep_run(UDI_MIDI_EP_IN,
         true,

@@ -152,6 +152,14 @@ void tx_blink(uint8_t port) {
     }
 }
 
+void rx_usb_blink() {
+    rx_blink(7);
+}
+
+void tx_usb_blink() {
+    tx_blink(7);
+}
+
 void tx_blink() {
     for (uint8_t i = 0; i < MAX_PORT; ++i) {
         tx_blink(i);
