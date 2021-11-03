@@ -49,15 +49,20 @@ VPATH           := $(PRJ_PATH)
 # Output target file
 target          := $(TARGET)
 
-# Output project name (target name minus suffix)
-project         := $(basename $(target))
-
 # Output target file (typically ELF or static library)
 ifeq ($(suffix $(target)),.a)
 target_type     := lib
+
+# Output project name (target name minus suffix)
+project         := $(target:.a=)
+
 else
 ifeq ($(suffix $(target)),.elf)
 target_type     := elf
+
+# Output project name (target name minus suffix)
+project         := $(target:.elf=)
+
 else
 $(error "Target type $(target_type) is not supported")
 endif
@@ -347,7 +352,7 @@ else
 	$(Q)$(if $(strip $(clean-dirs)),                        \
 		for directory in $(strip $(clean-dirs)); do     \
 			if [ -d "$$directory" ]; then           \
-				$(RMDIR) $$directory;           \
+				$(RMDIR) $$directory ||: ;           \
 			fi                                      \
 		done                                            \
 	)
@@ -439,27 +444,27 @@ endif
 endif
 
 # Create extended function listing from target output file.
-%.lss: $(target)
+$(project).lss: $(target)
 	@echo $(MSG_EXTENDED_LISTING)
 	$(Q)$(OBJDUMP) -h -S $< > $@
 
 # Create symbol table from target output file.
-%.sym: $(target)
+$(project).sym: $(target)
 	@echo $(MSG_SYMBOL_TABLE)
 	$(Q)$(NM) -n $< > $@
 
 # Create Intel HEX image from ELF output file.
-%.hex: $(target)
+$(project).hex: $(target)
 	@echo $(MSG_IHEX_IMAGE)
 	$(Q)$(OBJCOPY) -O ihex $(flashflags-gnu-y)  $< $@
 
 # Create EEPROM Intel HEX image from ELF output file.
-%.eep: $(target)
+$(project).eep: $(target)
 	@echo $(MSG_EEPROM_IMAGE)
 	$(Q)$(OBJCOPY) $(eepromflags-gnu-y) -O ihex $< $@  || exit 0
 
 # Create binary image from ELF output file.
-%.bin: $(target)
+$(project).bin: $(target)
 	@echo $(MSG_BINARY_IMAGE)
 	$(Q)$(OBJCOPY) -O binary $< $@
 

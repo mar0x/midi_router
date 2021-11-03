@@ -1,11 +1,13 @@
 
 # Path to top level ASF directory relative to this project directory.
 ASF = asf-3.50.0
-PRJ_PATH = ../..
+PRJ_PATH = .
+
+BUILD_DIR = $(BOARD)/$(MCU)/
 
 # Application target name. Given with suffix .a for library and .elf for a
 # standalone application.
-TARGET = $(BOARD)-$(MCU).elf
+TARGET = $(BUILD_DIR)$(BOARD)-$(MCU).elf
 
 # List of C source files.
 CSRCS = \
