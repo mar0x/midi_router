@@ -1,0 +1,29 @@
+
+LOCAL_PACKAGES = $(HOME)/Library/Arduino15/packages
+AVR_GCC_PATH = $(HOME)/projects/toolchain-avr/objdir
+
+ifneq ("$(wildcard $(LOCAL_PACKAGES)/arduino/tools/avrdude/6.3.0-arduino17)", "")
+AVRDUDE_PATH = $(LOCAL_PACKAGES)/arduino/tools/avrdude/6.3.0-arduino17
+else
+AVRDUDE_PATH = $(ARDUINO_ROOT)/hardware/tools/avr
+endif
+
+AVRDUDE_CONF = $(AVRDUDE_PATH)/etc/avrdude.conf
+AVRDUDE = $(AVRDUDE_PATH)/bin/avrdude -v -C $(AVRDUDE_CONF) -P usb $(N)
+
+include asf-3.50.0/common/utils/make/Makefile.avr.in
+
+.PHONY: upload-flip2
+upload-flip2: $(project).hex
+	$(AVRDUDE) -c flip2 -p $(MCU) -U application:w:$<:i
+
+.PHONY: upload-mk2
+upload-mk2: $(project).hex
+	$(AVRDUDE) -c avrispmkII -p $(MCU) -U application:w:$<:i
+
+.PHONY: upload-dfu
+upload-dfu: bin/dfu-$(MCU)-$(BOARD).ihex
+	$(AVRDUDE) -c avrispmkII -p $(MCU) \
+    -U flash:w:$<:i \
+    -U fuse2:w:0xbf:m
+
