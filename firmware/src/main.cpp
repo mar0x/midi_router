@@ -39,22 +39,26 @@
 
 #include "ui.h"
 #include "timer.h"
-#include "crit_sec.h"
 #include "midi.h"
 #include "midi_cmd.h"
 #include "artl/timer.h"
+#include "serial_cmd.h"
+#include "version.h"
+#include "cdc_print.h"
+#include "rst_blink.h"
 
-static volatile bool main_b_cdc_enabled = false;
-static bool main_b_cdc_dtr = false;
-static bool main_b_usb_midi_enabled = false;
+namespace {
 
-static void cdc_print_eol(void);
-static void cdc_print(uint16_t n);
-//static void cdc_print_l(unsigned long n);
+volatile bool cdc_enabled = false;
+bool usb_midi_enabled = false;
+serial_cmd_t serial_cmd;
+version_t version;
 
-static void usb_midi_dispatch(const midi_cmd_t& c, uint8_t jack);
+void usb_midi_dispatch(const midi_cmd_t& c, uint8_t jack);
 
-static void main_read_serial();
+void main_read_serial();
+
+}
 
 /*! \brief Main function. Execution starts here.
  */
@@ -63,17 +67,14 @@ int main(void)
     irq_initialize_vectors();
     cpu_irq_enable();
 
-    // Initialize the sleep manager
     sleepmgr_init();
-
     sysclk_init();
-    //board_init();
-
     timer_init();
 
     ui::init();
     ui::powerdown();
 
+    sleepmgr_lock_mode(SLEEPMGR_IDLE);
     midi::splitter();
 
     main_read_serial();
@@ -85,8 +86,6 @@ int main(void)
 
     unsigned long t = millis();
 
-    uint8_t rst_count = 0;
-    artl::timer<> rst_blink;
     midi_cmd_t current_cmd[7];
 
     // The main loop manages only the power mode
@@ -101,38 +100,36 @@ int main(void)
 
             if (ui::btn_update(t)) {
                 if (ui::btn_down()) {
-                    ui::rst_blink();
-                    rst_blink.schedule(t + 600);
+                    rst_blink_start(t);
                 } else {
-                    if (rst_count < 2) {
+                    if (rst_blink_count < 2) {
                         CCP = CCP_IOREG_gc; // see AU manual, sect 3.14.1 (protected I/O)
                         RST.CTRL |= RST_SWRST_bm;
-                    }
-
-                    rst_count = 0;
-                    rst_blink.cancel();
-                }
-            } else {
-                if (ui::btn_down() && rst_blink.update(t)) {
-                    rst_blink.schedule(t + 600);
-
-                    ui::rst_blink();
-
-                    rst_count++;
-
-                    if (rst_count >= 5) {
-                        RST.STATUS |= RST_SRF_bm;
-
-                        CCP = CCP_IOREG_gc; // see AU manual, sect 3.14.1 (protected I/O)
-                        WDT.CTRL = WDT_ENABLE_bm | WDT_CEN_bm | WDT_PER_8CLK_gc;
 
                         for (;;) ;
                     }
+
+                    if (usb_midi_enabled) {
+                        udc_stop();
+                    } else {
+                        udc_start();
+                    }
+
+                    rst_blink_stop();
                 }
+            } else {
+                rst_blink_update(t);
+            }
+
+            if (!usb_midi_enabled && midi::rx_ready) {
+                midi::rx_ready = 0;
+
+                ui::rx_blink(0);
+                ui::tx_blink();
             }
         }
 
-        if (main_b_usb_midi_enabled) {
+        if (usb_midi_enabled) {
             uint8_t port, data;
 
             while (midi::recv(port, data)) {
@@ -150,13 +147,6 @@ int main(void)
                     usb_midi_dispatch(current_cmd[port], port);
                     current_cmd[port].reset();
                 }
-            }
-        } else {
-            if (midi::rx_ready) {
-                midi::rx_ready = 0;
-
-                ui::rx_blink(0);
-                ui::tx_blink();
             }
         }
     }
@@ -178,25 +168,81 @@ void main_sof_action(void)
 
 bool main_cdc_enable(uint8_t port)
 {
-    main_b_cdc_enabled = true;
+    cdc_enabled = true;
     return true;
 }
 
 void main_cdc_disable(uint8_t port)
 {
-    main_b_cdc_enabled = false;
+    cdc_enabled = false;
 }
 
 void main_cdc_set_dtr(uint8_t port, bool b_enable)
 {
     if (b_enable) {
-        main_b_cdc_dtr = true;
+        cdc_dtr = true;
+
+        _cdc_prompt(port);
     } else {
-        main_b_cdc_dtr = false;
+        cdc_dtr = false;
     }
 }
 
+void process_serial_cmd(uint8_t port) {
+    switch(serial_cmd.command()) {
+    case serial_cmd_t::CMD_HELP:
+        for (uint16_t i = 0; i < sizeof(help_); ++i) {
+            char c = PROGMEM_READ_BYTE(help_ + i);
+
+            if (c == '\n') udi_cdc_multi_putc(port, '\r');
+
+            udi_cdc_multi_putc(port, c);
+        }
+        break;
+
+    case serial_cmd_t::CMD_VERSION:
+        for (uint8_t l = 0; l < version_t::MAX_LINE; ++l) {
+            cdc_println(port, version.lines[l]);
+        }
+        break;
+
+    case serial_cmd_t::CMD_SERIAL_NUMBER:
+        cdc_println(port, "SN ", version.sn());
+        break;
+
+    case serial_cmd_t::CMD_HARDWARE:
+        cdc_println(port, "HW ", version.hw());
+        break;
+
+    default:
+        cdc_println(port, "ERR");
+    }
+
+    serial_cmd.reset();
+}
+
 void main_cdc_rx_notify(uint8_t port) {
+    static uint8_t buf[16];
+    static iram_size_t size, i;
+
+    size = udi_cdc_multi_read_no_polling(port, buf, sizeof(buf));
+
+    for (i = 0; i < size; ++i) {
+        udi_cdc_multi_putc(port, buf[i]);
+
+        if (buf[i] == '\r') udi_cdc_multi_putc(port, '\n');
+
+        //cdc_print(buf[i]);
+        //udi_cdc_multi_putc(port, ' ');
+
+        serial_cmd.read(buf[i]);
+
+        if (serial_cmd) {
+            process_serial_cmd(port);
+
+            _cdc_prompt(port);
+        }
+    }
 }
 
 void main_cdc_config(uint8_t port, usb_cdc_line_coding_t * cfg) {
@@ -230,31 +276,9 @@ UDC_DESC_STORAGE udi_api_t udi_api_audio_ctrl = {
     .sof_notify = NULL,
 };
 
+namespace {
+
 uint8_t midi_buf[64];
-
-static void cdc_print_eol(void) {
-    if (!main_b_cdc_dtr) return;
-
-    udi_cdc_putc('\r');
-    udi_cdc_putc('\n');
-}
-
-static void cdc_print(uint16_t n) {
-    char buf[5];
-    uint8_t s = sizeof(buf) - 1;
-
-    if (!main_b_cdc_dtr) return;
-
-    do {
-        uint16_t c = n % 10;
-        n = n / 10;
-        buf[s--] = '0' + c;
-    } while (n > 0);
-
-    for(s++; s < sizeof(buf); s++) {
-        udi_cdc_putc(buf[s]);
-    }
-}
 
 struct usb_midi_event_t {
     uint8_t header;
@@ -306,11 +330,11 @@ bool midi_dispatch(const usb_midi_event_t &ev) {
     return true;
 }
 
-static void usb_midi_received(udd_ep_status_t status, iram_size_t n, udd_ep_id_t ep)
+void usb_midi_received(udd_ep_status_t status, iram_size_t n, udd_ep_id_t ep)
 {
     if (n > 0) { ui::rx_usb_blink(); }
 
-    if (main_b_cdc_dtr) {
+    if (cdc_dtr) {
         cdc_print(millis());
         udi_cdc_putc(' ');
         cdc_print(n);
@@ -336,8 +360,11 @@ static void usb_midi_received(udd_ep_status_t status, iram_size_t n, udd_ep_id_t
         usb_midi_received);
 }
 
-static bool udi_midi_enable(void) {
-    main_b_usb_midi_enabled = true;
+bool udi_midi_enable(void) {
+    if (!usb_midi_enabled) {
+        usb_midi_enabled = true;
+        sleepmgr_unlock_mode(SLEEPMGR_IDLE);
+    }
 
     ui::usb_midi_enable();
     midi::init();
@@ -351,23 +378,26 @@ static bool udi_midi_enable(void) {
     return true;
 }
 
-static void udi_midi_disable(void) {
-    main_b_usb_midi_enabled = false;
+void udi_midi_disable(void) {
+    if (usb_midi_enabled) {
+        usb_midi_enabled = false;
+        sleepmgr_lock_mode(SLEEPMGR_IDLE);
+    }
 
     ui::usb_midi_disable();
     midi::splitter();
 }
 
 /*
-static usb_midi_event_t usb_midi_ev_ring[16];
-static uint8_t usb_midi_ev_idx = 0;
+usb_midi_event_t usb_midi_ev_ring[16];
+uint8_t usb_midi_ev_idx = 0;
 */
 
-static void usb_midi_sent(udd_ep_status_t status, iram_size_t n, udd_ep_id_t ep)
+void usb_midi_sent(udd_ep_status_t status, iram_size_t n, udd_ep_id_t ep)
 {
 }
 
-static void usb_midi_dispatch(const midi_cmd_t& c, uint8_t jack)
+void usb_midi_dispatch(const midi_cmd_t& c, uint8_t jack)
 {
     static usb_midi_event_t ev;
     //usb_midi_event_t *ev = &usb_midi_ev_ring[usb_midi_ev_idx];
@@ -429,7 +459,7 @@ static void usb_midi_dispatch(const midi_cmd_t& c, uint8_t jack)
     ev.byte2 = c.size() > 1 ? c[1] : 0;
     ev.byte3 = c.size() > 2 ? c[2] : 0;
 
-    if (main_b_cdc_dtr) {
+    if (cdc_dtr) {
         cdc_print(millis());
         udi_cdc_putc(':');
         udi_cdc_putc('u');
@@ -452,12 +482,14 @@ static void usb_midi_dispatch(const midi_cmd_t& c, uint8_t jack)
         usb_midi_sent);
 }
 
-static bool udi_midi_setup(void) {
+bool udi_midi_setup(void) {
     return false;
 }
 
-static uint8_t udi_midi_getsetting(void) {
+uint8_t udi_midi_getsetting(void) {
     return 0;
+}
+
 }
 
 //! Global structure which contains standard UDI API for UDC
@@ -469,16 +501,18 @@ UDC_DESC_STORAGE udi_api_t udi_api_midi = {
     .sof_notify = NULL,
 };
 
-//! Storage for serial number
-static struct nvm_device_serial serial;
-static uint8_t serial_str[16];
+namespace {
 
-static uint8_t hex_str(uint8_t b) {
+//! Storage for serial number
+struct nvm_device_serial serial;
+uint8_t serial_str[16];
+
+uint8_t hex_str(uint8_t b) {
     if (b < 10) return '0' + b;
     return 'A' + b;
 }
 
-static void main_read_serial() {
+void main_read_serial() {
     nvm_read_device_serial(&serial);
 
     memcpy(serial_str, serial.byte, 6);
@@ -489,6 +523,10 @@ static void main_read_serial() {
         *c++ = hex_str(serial.byte[i] >> 4);
         *c++ = hex_str(serial.byte[i] & 0x0F);
     }
+
+    version.sn(serial_str);
+}
+
 }
 
 const uint8_t *main_serial_name() {
