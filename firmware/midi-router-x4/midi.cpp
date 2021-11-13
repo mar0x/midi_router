@@ -1,5 +1,6 @@
 
 #include <uart.h>
+#include <crit_sec.h>
 
 namespace {
 
@@ -149,6 +150,8 @@ ISR(USARTD0_DRE_vect)
 
 ISR(PORTD_INT0_vect)
 {
+    crit_sec cs;
+
     bool v = uart_d0::rx::read();
 
     if (v) {
