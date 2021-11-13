@@ -200,5 +200,5 @@ void timer_init()
 
     timer_init(&TCD2);
 
-    TCD2.INTCTRLA |= TC2_LUNFINTLVL_HI_gc; // enable LOW underflow interrupt, pri level 3 (see 15.10.5 in AU manual)
+    TCD2.INTCTRLA |= TC2_LUNFINTLVL_MED_gc; // enable LOW underflow interrupt, pri level 2 (see 15.10.5 in AU manual)
 }
