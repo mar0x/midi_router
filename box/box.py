@@ -11,7 +11,7 @@ if midi_sock_count == 7:
     board_length = 160
     board_width = 80
     board_thickness = 1.6
-    board_clearance = 0.3
+    board_clearance = 0.6
     board_corner_r = 10
     fillet_r = 3
 
@@ -19,17 +19,17 @@ if midi_sock_count == 7:
     box_thickness = 2
 
     base_stand_d = 8
-    screw_cup_hole_d = 6
+    screw_cup_hole_d = 5.5
     base_edge_height = 2
 
-    base_stand_hole_d = 3.2
+    base_stand_hole_d = 3.0
     base_stand_h = 3
 
     cover_stand_d = base_stand_d
     cover_stand_d1 = 10
     cover_edge_height = 4
     cover_stand_hole_d = 2.5
-    cover_clearance = 0.1
+    cover_clearance = 0.2
 
     stand_x_step = 150
     stand_y_step = 66
@@ -39,7 +39,8 @@ if midi_sock_count == 7:
     midi_sock_d = 16
     midi_sock_shift = 10 # above board
     led_shift = midi_sock_shift + 13 # above board
-    led_d = 2
+    led_size = (5.2, 2.7) # rect
+    # or led_size = 2 for round hole
 
     usb_led_step = 20
     usb_width = 12
@@ -77,7 +78,8 @@ if midi_sock_count == 4:
     midi_sock_d = 16
     midi_sock_shift = 10 # above board
     led_shift = midi_sock_shift + 15 # above board
-    led_d = 2
+    led_size = 2 # round hole
+    # or led_size = (5.2, 2.7) for rect
 
     usb_led_step = 6
     usb_width = 12
@@ -116,7 +118,8 @@ if midi_sock_count == 1:
     midi_sock_d = 16
     midi_sock_shift = 10 # above board
     led_shift = midi_sock_shift + 11 # above board
-    led_d = 2
+    led_size = 2 # round hole
+    # or led_size = (5.2, 2.7) for rect
 
     usb_led_step = 6
     usb_width = 12
@@ -128,6 +131,7 @@ box_inner_width = board_width + 2 * board_clearance
 
 box_outer_length = box_inner_length + 2 * box_thickness
 box_outer_width = box_inner_width + 2 * box_thickness
+box_outer_height = box_inner_height + box_thickness
 
 cover_stand_h = box_inner_height + 1 - base_stand_h - board_thickness
 
@@ -135,10 +139,12 @@ edge_center_shift = (stand_x_step / 2) ** 2 + (stand_y_step / 2)  ** 2 - (centra
 edge_center_shift = edge_center_shift / stand_y_step
 edge_rad = math.sqrt( (central_stand_x_step / 2) ** 2 + edge_center_shift ** 2)
 
-# extra -1 added because of 3mm fillet which rises face edge 1mm above the inner bottom
-board_top_shift = (base_stand_h + board_thickness) - (box_inner_height / 2) - 1
+# because of (3mm) fillet which rises face edge above
+# face height is (box_outer_height - fillet_r)
+# face edge is fillet_r above 0
+board_top_shift = - (box_outer_height - fillet_r) / 2 - fillet_r + (box_thickness + base_stand_h + board_thickness)
 
-usb_shift = (base_stand_h + board_thickness + box_thickness + usb_height / 2)
+usb_z_shift = box_thickness + base_stand_h + board_thickness + usb_height / 2
 
 
 # New method to render script results using the CadQuery Gateway Interface
@@ -158,26 +164,12 @@ if midi_sock_count == 7:
 
 # make the box
 base = cq.Workplane("XY").rect(box_outer_length, box_outer_width) \
-        .extrude(box_inner_height + box_thickness) \
+        .extrude(box_outer_height) \
         .edges("|Z").fillet(board_corner_r + board_clearance + box_thickness) \
         .faces("<Z").fillet(fillet_r)
 
-# extrude base edges
-e1 = cq.Workplane("XY").center(0, edge_center_shift) \
-        .circle(edge_rad + 4).circle(edge_rad + 2) \
-        .extrude(box_thickness + base_edge_height) \
-        .intersect(base)
-
-e2 = cq.Workplane("XY").center(0, -edge_center_shift) \
-        .circle(edge_rad + 4).circle(edge_rad + 2) \
-        .extrude(box_thickness + base_edge_height) \
-        .intersect(base)
-
 # turn box to shell
 base = base.faces(">Z").shell(-box_thickness)
-
-# merge edges into base
-base = base.union(e1).union(e2)
 
 # extrude base stands
 base = base.faces("<Z[-2]").workplane(centerOption="CenterOfBoundBox") \
@@ -195,26 +187,28 @@ base = base.faces(">Y").workplane(centerOption="CenterOfBoundBox") \
         .rarray(midi_sock_step, 1, midi_sock_count, 1, True) \
         .hole(midi_sock_d)
 
-base = base.faces(">Y").workplane(centerOption="CenterOfBoundBox") \
+midi_led_plane = base.faces(">Y").workplane(centerOption="CenterOfBoundBox") \
         .center(0, board_top_shift + led_shift) \
-        .rarray(midi_sock_step, 1, midi_sock_count, 1, True) \
-        .rect(5.2, 2.7) \
-        .cutBlind(-box_outer_width)
+        .rarray(midi_sock_step, 1, midi_sock_count, 1, True)
 
-#        .hole(led_d)
+if isinstance(led_size, (list, tuple)):
+    base = midi_led_plane.rect(*led_size).cutBlind(-box_outer_width)
+else:
+    base = midi_led_plane.hole(led_size)
 
-base = base.faces("<X").workplane(centerOption="CenterOfBoundBox") \
+usb_led_plane = base.faces("<X").workplane(centerOption="CenterOfBoundBox") \
         .center(0, board_top_shift + led_shift) \
-        .rarray(usb_led_step, 1, 3, 1, True) \
-        .rect(5.2, 2.7) \
-        .cutBlind(-box_thickness)
+        .rarray(usb_led_step, 1, 3, 1, True)
 
-#        .hole(led_d, box_thickness)
+if isinstance(led_size, (list, tuple)):
+    base = usb_led_plane.rect(*led_size).cutBlind(-box_thickness)
+else:
+    base = usb_led_plane.hole(led_size, box_thickness)
 
 usb = cq.Workplane("YZ").rect(usb_width, usb_height) \
         .extrude(-box_thickness) \
         .edges("|X").fillet(1) \
-        .translate((-box_inner_length / 2, 0, usb_shift))
+        .translate((-box_inner_length / 2, 0, usb_z_shift))
 
 base = base.cut(usb)
 
