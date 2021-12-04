@@ -34,12 +34,9 @@
  * Support and FAQ: visit <a href="https://www.microchip.com/support/">Microchip Support</a>
  */
 
-#include "asf.h"
 #include <ui.h>
 
 #include "led.h"
-#include "blink_state.h"
-#include "pulse_state.h"
 #include <artl/button.h>
 #include <artl/digital_in.h>
 #include <timer.h>
@@ -47,21 +44,9 @@
 
 namespace {
 
-enum {
-    MAX_PORT = 4,
-    USB_PORT = 4,
-};
-
 using btn_in = artl::digital_in<artl::port::C, 1>;
 
 artl::button<> btn;
-
-pulse_state_t pulse_state;
-blink_state_t rst_blink_state;
-blink_state_t rx_blink_state[MAX_PORT + 1];
-blink_state_t tx_blink_state[MAX_PORT + 1];
-
-bool usb_midi_enabled = false;
 
 }
 
@@ -116,46 +101,13 @@ bool btn_down() {
     return btn.down();
 }
 
-void rst_blink() {
-    rst_blink_state.start();
-}
-
-void rx_blink(uint8_t port) {
-    rx_blink_state[port].start();
-}
-
-void tx_blink(uint8_t port) {
-    tx_blink_state[port].start();
-}
-
-void rx_usb_blink() {
-    rx_blink(4);
-}
-
-void tx_usb_blink() {
-    tx_blink(4);
-}
-
-void tx_blink() {
-    for (uint8_t i = 0; i < MAX_PORT; ++i) {
-        tx_blink(i);
-    }
-}
-
-void usb_midi_enable() {
-    usb_midi_enabled = true;
-
-    rx_usb_blink();
-    tx_usb_blink();
-}
-
 void usb_midi_disable() {
     usb_midi_enabled = false;
 
-    rx_blink_state[MAX_PORT].stop();
+    rx_blink_state[USB_LED_ID].stop();
     led_rxusb::high();
 
-    tx_blink_state[MAX_PORT].stop();
+    tx_blink_state[USB_LED_ID].stop();
     led_txusb::high();
 }
 
@@ -200,6 +152,8 @@ void startup_animation() {
 }
 
 }
+
+using namespace ui;
 
 ISR(TCD2_HUNF_vect)
 {

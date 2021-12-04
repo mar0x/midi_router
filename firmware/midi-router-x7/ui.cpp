@@ -34,7 +34,6 @@
  * Support and FAQ: visit <a href="https://www.microchip.com/support/">Microchip Support</a>
  */
 
-#include "asf.h"
 #include <ui.h>
 
 #include "led.h"
@@ -45,19 +44,9 @@
 
 namespace {
 
-enum {
-    MAX_PORT = 7
-};
-
 using btn_in = artl::digital_in<artl::port::A, 1>;
 
 artl::button<> btn;
-
-uint16_t led_rst_state = 0;
-uint16_t led_rx_state[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-uint16_t led_tx_state[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-
-bool usb_midi_enabled = false;
 
 }
 
@@ -128,50 +117,13 @@ bool btn_down() {
     return btn.down();
 }
 
-void rst_blink() {
-    led_rst_state = 0x8000;
-}
-
-void rx_blink(uint8_t port) {
-    if (led_rx_state[port] < 0x2000) {
-        led_rx_state[port] = 0x8000;
-    }
-}
-
-void tx_blink(uint8_t port) {
-    if (led_tx_state[port] < 0x2000) {
-        led_tx_state[port] = 0x8000;
-    }
-}
-
-void rx_usb_blink() {
-    rx_blink(7);
-}
-
-void tx_usb_blink() {
-    tx_blink(7);
-}
-
-void tx_blink() {
-    for (uint8_t i = 0; i < MAX_PORT; ++i) {
-        tx_blink(i);
-    }
-}
-
-void usb_midi_enable() {
-    usb_midi_enabled = true;
-
-    rx_blink(7);
-    tx_blink(7);
-}
-
 void usb_midi_disable() {
     usb_midi_enabled = false;
 
-    led_rx_state[7] = 0;
+    rx_blink_state[USB_LED_ID].stop();
     led_rxusb::high();
 
-    led_tx_state[7] = 0;
+    tx_blink_state[USB_LED_ID].stop();
     led_txusb::high();
 }
 
@@ -220,68 +172,31 @@ void startup_animation() {
 
 }
 
-namespace {
-
-bool led_state(uint16_t &state, int16_t delta = 0) {
-    uint8_t p = state >> 8;
-
-    if (p > 254) { p = 254; }
-    if (p > 127) { p = 254 - p; }
-
-    p += p;
-
-    bool res = ((state & 0xFF) <= p);
-
-    state += delta;
-
-    return res;
-}
-
-/* Breathing animation */
-void LEDPulse()
-{
-    enum { START = 0x2000 };
-    static uint16_t pulse_state = START;
-
-    ++pulse_state;
-    if (pulse_state >= 0xFFFF - START) { pulse_state = START; }
-
-    uint16_t c;
-    if (btn.down()) {
-        c = led_rst_state;
-
-        if (led_rst_state > 0) {
-            led_rst_state -= 4;
-        }
-
-    } else {
-        c = pulse_state;
-    }
-
-    led_pwr::write(led_state(c));
-
-    if (led_rx_state[0]) { led_rx0::write(led_state(led_rx_state[0], -4)); }
-    if (led_rx_state[1]) { led_rx1::write(led_state(led_rx_state[1], -4)); }
-    if (led_rx_state[2]) { led_rx2::write(led_state(led_rx_state[2], -4)); }
-    if (led_rx_state[3]) { led_rx3::write(led_state(led_rx_state[3], -4)); }
-    if (led_rx_state[4]) { led_rx4::write(led_state(led_rx_state[4], -4)); }
-    if (led_rx_state[5]) { led_rx5::write(led_state(led_rx_state[5], -4)); }
-    if (led_rx_state[6]) { led_rx6::write(led_state(led_rx_state[6], -4)); }
-    if (led_rx_state[7]) { led_rxusb::write(led_state(led_rx_state[7], -4)); }
-
-    if (led_tx_state[0]) { led_tx0::write(led_state(led_tx_state[0], -4)); }
-    if (led_tx_state[1]) { led_tx1::write(led_state(led_tx_state[1], -4)); }
-    if (led_tx_state[2]) { led_tx2::write(led_state(led_tx_state[2], -4)); }
-    if (led_tx_state[3]) { led_tx3::write(led_state(led_tx_state[3], -4)); }
-    if (led_tx_state[4]) { led_tx4::write(led_state(led_tx_state[4], -4)); }
-    if (led_tx_state[5]) { led_tx5::write(led_state(led_tx_state[5], -4)); }
-    if (led_tx_state[6]) { led_tx6::write(led_state(led_tx_state[6], -4)); }
-    if (led_tx_state[7]) { led_txusb::write(led_state(led_tx_state[7], -4)); }
-}
-
-}
+using namespace ui;
 
 ISR(TCD2_HUNF_vect)
 {
-    LEDPulse();
+    if (!btn.down()) {
+        pulse_state.write<led_pwr>();
+    } else {
+        rst_blink_state.write<led_pwr>();
+    }
+
+    rx_blink_state[0].write<led_rx0>();
+    rx_blink_state[1].write<led_rx1>();
+    rx_blink_state[2].write<led_rx2>();
+    rx_blink_state[3].write<led_rx3>();
+    rx_blink_state[4].write<led_rx4>();
+    rx_blink_state[5].write<led_rx5>();
+    rx_blink_state[6].write<led_rx6>();
+    rx_blink_state[7].write<led_rxusb>();
+
+    tx_blink_state[0].write<led_tx0>();
+    tx_blink_state[1].write<led_tx1>();
+    tx_blink_state[2].write<led_tx2>();
+    tx_blink_state[3].write<led_tx3>();
+    tx_blink_state[4].write<led_tx4>();
+    tx_blink_state[5].write<led_tx5>();
+    tx_blink_state[6].write<led_tx6>();
+    tx_blink_state[7].write<led_txusb>();
 }

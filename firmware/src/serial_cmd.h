@@ -12,8 +12,11 @@ struct serial_cmd_t {
         CMD_VERSION,            // V
         CMD_ECHO,               // E e
         CMD_FACTORY_RESET,      // FR v
-        CMD_MIDI_MON_IN,        // MMI
-        CMD_MIDI_MON_OUT,       // MMO
+        CMD_MIDI_MON,           // MM p
+        CMD_MIDI_MON_IN,        // MMI p
+        CMD_MIDI_MON_OUT,       // MMO p
+        CMD_UPTIME,             // U
+        CMD_PORTS,              // P n
         CMD_HELP,               // ?
 
         CMD_SERIAL_NUMBER,      // SN
@@ -275,6 +278,7 @@ serial_cmd_t::parse() {
             if (b[0] == 'F' && b[1] == 'R') { command_ = CMD_FACTORY_RESET; }
             if (b[0] == 'S' && b[1] == 'N') { command_ = CMD_SERIAL_NUMBER; }
             if (b[0] == 'H' && b[1] == 'W') { command_ = CMD_HARDWARE; }
+            if (b[0] == 'M' && b[1] == 'M') { command_ = CMD_MIDI_MON; }
             break;
 
         case 3:
@@ -292,6 +296,13 @@ static PROGMEM_DECLARE(char, help_[]) = R"HELP(
 DL [<L>] - debug level
 E [1/0] - echo
 V - show version
+
+MM - MIDI monitor
+MMI - monitor IN
+MMO - monitor OUT
+
+U - show uptime
+P [<N>] - port info
 
 FR <V> - factory reset
 )HELP";

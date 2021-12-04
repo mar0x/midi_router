@@ -34,7 +34,6 @@
  * Support and FAQ: visit <a href="https://www.microchip.com/support/">Microchip Support</a>
  */
 
-#include "asf.h"
 #include <ui.h>
 
 #include "led.h"
@@ -42,20 +41,6 @@
 #include <artl/digital_in.h>
 #include <timer.h>
 #include <artl/timer.h>
-
-namespace {
-
-enum {
-    MAX_PORT = 2
-};
-
-uint16_t led_rst_state = 0;
-uint16_t led_rx_state[2] = {0, 0};
-uint16_t led_tx_state[2] = {0, 0};
-
-bool usb_midi_enabled = false;
-
-}
 
 namespace ui {
 
@@ -95,35 +80,6 @@ bool btn_update(unsigned long t) {
 
 bool btn_down() {
     return false;
-}
-
-void rst_blink() {
-    led_rst_state = 0x8000;
-}
-
-void rx_blink(uint8_t port) {
-    if (led_rx_state[port] < 0x2000) {
-        led_rx_state[port] = 0x8000;
-    }
-}
-
-void tx_blink(uint8_t port) {
-    if (led_tx_state[port] < 0x2000) {
-        led_tx_state[port] = 0x8000;
-    }
-}
-
-void rx_usb_blink() { }
-void tx_usb_blink() { }
-
-void tx_blink() {
-    for (uint8_t i = 0; i < MAX_PORT; ++i) {
-        tx_blink(i);
-    }
-}
-
-void usb_midi_enable() {
-    usb_midi_enabled = true;
 }
 
 void usb_midi_disable() {
@@ -173,44 +129,15 @@ void startup_animation() {
 
 }
 
-namespace {
-
-bool led_state(uint16_t &state, int16_t delta = 0) {
-    uint8_t p = state >> 8;
-
-    if (p > 254) { p = 254; }
-    if (p > 127) { p = 254 - p; }
-
-    p += p;
-
-    bool res = ((state & 0xFF) <= p);
-
-    state += delta;
-
-    return res;
-}
-
-/* Breathing animation */
-void LEDPulse()
-{
-    enum { START = 0x2000 };
-    static uint16_t pulse_state = START;
-
-    ++pulse_state;
-    if (pulse_state >= 0xFFFF - START) { pulse_state = START; }
-
-    led_pwr::write(led_state(pulse_state));
-
-    if (led_rx_state[0]) { led_rx0::write(led_state(led_rx_state[0], -4)); }
-    if (led_rx_state[1]) { led_rx1::write(led_state(led_rx_state[1], -4)); }
-
-    if (led_tx_state[0]) { led_tx0::write(led_state(led_tx_state[0], -4)); }
-    if (led_tx_state[1]) { led_tx1::write(led_state(led_tx_state[1], -4)); }
-}
-
-}
+using namespace ui;
 
 ISR(TCD2_HUNF_vect)
 {
-    LEDPulse();
+    pulse_state.write<led_pwr>();
+
+    rx_blink_state[0].write<led_rx0>();
+    rx_blink_state[1].write<led_rx1>();
+
+    tx_blink_state[0].write<led_tx0>();
+    tx_blink_state[1].write<led_tx1>();
 }

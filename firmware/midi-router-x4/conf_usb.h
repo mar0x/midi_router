@@ -221,6 +221,7 @@
 //	&udi_api_msc
 //@}
 
+#define MIDI_PORTS 4
 
 /**
  * USB Device Driver Configuration

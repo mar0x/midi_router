@@ -34,8 +34,10 @@
  * Support and FAQ: visit <a href="https://www.microchip.com/support/">Microchip Support</a>
  */
 
-#include <asf.h>
+extern "C" {
+#include "asf.h"
 #include <conf_usb.h>
+}
 
 #include "ui.h"
 #include "timer.h"
@@ -53,6 +55,7 @@ volatile bool cdc_enabled = false;
 bool usb_midi_enabled = false;
 serial_cmd_t serial_cmd;
 version_t version;
+bool cdc_print_prompt = false;
 
 void usb_midi_dispatch(const midi_cmd_t& c, uint8_t jack);
 
@@ -103,6 +106,8 @@ int main(void)
                     rst_blink_start(t);
                 } else {
                     if (rst_blink_count < 2) {
+                        reset_do_soft_reset();
+
                         CCP = CCP_IOREG_gc; // see AU manual, sect 3.14.1 (protected I/O)
                         RST.CTRL |= RST_SWRST_bm;
 
@@ -133,7 +138,11 @@ int main(void)
             uint8_t port, data;
 
             while (midi::recv(port, data)) {
-                ui::rx_blink(port);
+                if (data == CMD_SYS_ACTIVE_S) {
+                    ui::rx_active(port);
+                } else {
+                    ui::rx_blink(port);
+                }
 
                 if (is_midi_rt(data)) {
                     midi_cmd_t cmd;
@@ -147,6 +156,20 @@ int main(void)
                     usb_midi_dispatch(current_cmd[port], port);
                     current_cmd[port].reset();
                 }
+            }
+        }
+
+        if (cdc_print_prompt) {
+            cdc_print_prompt = false;
+
+            if (cdc_dtr) {
+                _cdc_println(0, USB_DEVICE_PRODUCT_NAME);
+
+                for (uint8_t l = 0; l < version_t::MAX_LINE; ++l) {
+                    _cdc_println(0, version.lines[l]);
+                }
+
+                _cdc_prompt(0);
             }
         }
     }
@@ -182,7 +205,7 @@ void main_cdc_set_dtr(uint8_t port, bool b_enable)
     if (b_enable) {
         cdc_dtr = true;
 
-        _cdc_prompt(port);
+        cdc_print_prompt = true;
     } else {
         cdc_dtr = false;
     }
@@ -211,7 +234,6 @@ void process_serial_cmd(uint8_t port) {
         break;
 
     case serial_cmd_t::CMD_HARDWARE: {
-/*
         char v[10];
 
         if (serial_cmd.get_arg(1, v)) {
@@ -219,7 +241,7 @@ void process_serial_cmd(uint8_t port) {
 
             version.hw(v);
         }
-*/
+
         cdc_println(port, "HW ", version.hw());
         break;
     }
@@ -312,6 +334,7 @@ bool midi_dispatch(const usb_midi_event_t &ev) {
     case 1:
         return false;
     case 5:
+    case 0xF:
         s = 1;
         break;
     case 2:
@@ -335,15 +358,20 @@ bool midi_dispatch(const usb_midi_event_t &ev) {
     uint8_t jack = (ev.header & 0xF0) >> 4;
 
     midi::send(jack, &ev.byte1, s);
-    ui::tx_blink(jack);
+
+    if (ev.byte1 == CMD_SYS_ACTIVE_S) {
+        ui::rx_usb_active();
+        ui::tx_active(jack);
+    } else {
+        ui::rx_usb_blink();
+        ui::tx_blink(jack);
+    }
 
     return true;
 }
 
 void usb_midi_received(udd_ep_status_t status, iram_size_t n, udd_ep_id_t ep)
 {
-    if (n > 0) { ui::rx_usb_blink(); }
-
     if (cdc_dtr) {
         cdc_print(millis());
         udi_cdc_putc(' ');
@@ -483,7 +511,11 @@ void usb_midi_dispatch(const midi_cmd_t& c, uint8_t jack)
         cdc_print_eol();
     }
 
-    ui::tx_usb_blink();
+    if (c.command() == CMD_SYS_ACTIVE_S) {
+        ui::tx_usb_active();
+    } else {
+        ui::tx_usb_blink();
+    }
 
     udd_ep_run(UDI_MIDI_EP_IN,
         true,

@@ -1,14 +1,9 @@
 
+#include <midi.h>
 #include <uart.h>
 #include <crit_sec.h>
 
 namespace {
-
-enum {
-    MAX_PORT = 4
-};
-
-volatile bool port_ready[MAX_PORT];
 
 using uart_c0 = uart_t<port::C0, 31250>;
 template<> uart_c0::rx_ring_t uart_c0::rx_ring = {};
@@ -26,23 +21,9 @@ using uart_e0 = uart_t<port::E0, 31250>;
 template<> uart_e0::rx_ring_t uart_e0::rx_ring = {};
 template<> uart_e0::tx_ring_t uart_e0::tx_ring = {};
 
-inline
-bool port_read(uint8_t port, uint8_t &data) {
-    switch (port) {
-    case 0: return uart_d0::bread(data);
-    case 1: return uart_e0::bread(data);
-    case 2: return uart_c0::bread(data);
-    case 3: return uart_c1::bread(data);
-    }
-
-    return false;
-}
-
 }
 
 namespace midi {
-
-volatile uint8_t rx_ready;
 
 void init() {
     PORTD.INT0MASK = 0;
@@ -74,27 +55,20 @@ void splitter() {
     PORTD.INTCTRL = PORT_INT0LVL_HI_gc;
 }
 
-bool recv(uint8_t &port, uint8_t &data) {
-    uint8_t ready = rx_ready;
-
-    for (uint8_t i = 0; i < MAX_PORT; ++i) {
-        uint8_t n = (i + ready) % MAX_PORT;
-
-        if (port_ready[n]) {
-            crit_sec cs;
-
-            if (port_read(n, data)) {
-                port = n;
-                return true;
-            }
-
-            port_ready[n] = false;
-        }
+bool port_read(uint8_t port, uint8_t &data) {
+    switch (port) {
+    case 0: return uart_d0::bread(data);
+    case 1: return uart_e0::bread(data);
+    case 2: return uart_c0::bread(data);
+    case 3: return uart_c1::bread(data);
     }
+
     return false;
 }
 
 uint8_t send(uint8_t port, const uint8_t *buf, uint8_t size) {
+    port_out_bytes[port] += size;
+
     switch (port) {
     case 0: return uart_c0::write_buf(buf, size);
     case 1: return uart_c1::write_buf(buf, size);
@@ -107,12 +81,14 @@ uint8_t send(uint8_t port, const uint8_t *buf, uint8_t size) {
 
 }
 
+using namespace midi;
+
 ISR(USARTC0_RXC_vect)
 {
     uart_c0::on_rxc_int();
 
     port_ready[2] = true;
-    midi::rx_ready = 2;
+    rx_ready = 2;
 }
 
 ISR(USARTC0_DRE_vect)
@@ -126,7 +102,7 @@ ISR(USARTC1_RXC_vect)
     uart_c1::on_rxc_int();
 
     port_ready[3] = true;
-    midi::rx_ready = 3;
+    rx_ready = 3;
 }
 
 ISR(USARTC1_DRE_vect)
@@ -140,7 +116,7 @@ ISR(USARTD0_RXC_vect)
     uart_d0::on_rxc_int();
 
     port_ready[0] = true;
-    midi::rx_ready = 0;
+    rx_ready = 0;
 }
 
 ISR(USARTD0_DRE_vect)
@@ -165,7 +141,7 @@ ISR(PORTD_INT0_vect)
         uart_c0::tx::low();
         uart_c1::tx::low();
 
-        midi::rx_ready = 1;
+        rx_ready = 1;
     }
 }
 
@@ -175,7 +151,7 @@ ISR(USARTE0_RXC_vect)
     uart_e0::on_rxc_int();
 
     port_ready[1] = true;
-    midi::rx_ready = 1;
+    rx_ready = 1;
 }
 
 ISR(USARTE0_DRE_vect)
