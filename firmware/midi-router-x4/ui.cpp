@@ -38,6 +38,8 @@
 #include <ui.h>
 
 #include "led.h"
+#include "blink_state.h"
+#include "pulse_state.h"
 #include <artl/button.h>
 #include <artl/digital_in.h>
 #include <timer.h>
@@ -46,16 +48,18 @@
 namespace {
 
 enum {
-    MAX_PORT = 4
+    MAX_PORT = 4,
+    USB_PORT = 4,
 };
 
 using btn_in = artl::digital_in<artl::port::C, 1>;
 
 artl::button<> btn;
 
-uint16_t led_rst_state = 0;
-uint16_t led_rx_state[5] = {0, 0, 0, 0, 0};
-uint16_t led_tx_state[5] = {0, 0, 0, 0, 0};
+pulse_state_t pulse_state;
+blink_state_t rst_blink_state;
+blink_state_t rx_blink_state[MAX_PORT + 1];
+blink_state_t tx_blink_state[MAX_PORT + 1];
 
 bool usb_midi_enabled = false;
 
@@ -79,12 +83,12 @@ void init(void)
 
     btn_in::setup();
 
-    TCD2.INTCTRLA |= TC2_HUNFINTLVL_HI_gc; // enable HIGH underflow interrupt, pri level 3 (see 15.10.5 in AU manual)
+    TCD2.INTCTRLA |= TC2_HUNFINTLVL_MED_gc; // enable HIGH underflow interrupt, pri level 2 (see 15.10.5 in AU manual)
 }
 
 void powerdown(void)
 {
-    TCD2.INTCTRLA &= ~TC2_HUNFINTLVL_HI_gc; // enable HIGH underflow interrupt, pri level 3 (see 15.10.5 in AU manual)
+    TCD2.INTCTRLA &= ~TC2_HUNFINTLVL_MED_gc; // disable HIGH underflow interrupt, pri level 2 (see 15.10.5 in AU manual)
 
     led_pwr::low();
     led_txusb::low();
@@ -101,15 +105,7 @@ void powerdown(void)
 
 void wakeup(void)
 {
-    TCD2.INTCTRLA |= TC2_HUNFINTLVL_HI_gc; // enable HIGH underflow interrupt, pri level 3 (see 15.10.5 in AU manual)
-}
-
-void com_error(void)
-{
-}
-
-void com_overflow(void)
-{
+    TCD2.INTCTRLA |= TC2_HUNFINTLVL_MED_gc; // enable HIGH underflow interrupt, pri level 2 (see 15.10.5 in AU manual)
 }
 
 bool btn_update(unsigned long t) {
@@ -121,19 +117,15 @@ bool btn_down() {
 }
 
 void rst_blink() {
-    led_rst_state = 0x8000;
+    rst_blink_state.start();
 }
 
 void rx_blink(uint8_t port) {
-    if (led_rx_state[port] < 0x2000) {
-        led_rx_state[port] = 0x8000;
-    }
+    rx_blink_state[port].start();
 }
 
 void tx_blink(uint8_t port) {
-    if (led_tx_state[port] < 0x2000) {
-        led_tx_state[port] = 0x8000;
-    }
+    tx_blink_state[port].start();
 }
 
 void rx_usb_blink() {
@@ -153,17 +145,17 @@ void tx_blink() {
 void usb_midi_enable() {
     usb_midi_enabled = true;
 
-    rx_blink(4);
-    tx_blink(4);
+    rx_usb_blink();
+    tx_usb_blink();
 }
 
 void usb_midi_disable() {
     usb_midi_enabled = false;
 
-    led_rx_state[4] = 0;
+    rx_blink_state[MAX_PORT].stop();
     led_rxusb::high();
 
-    led_tx_state[4] = 0;
+    tx_blink_state[MAX_PORT].stop();
     led_txusb::high();
 }
 
@@ -209,62 +201,23 @@ void startup_animation() {
 
 }
 
-namespace {
-
-bool led_state(uint16_t &state, int16_t delta = 0) {
-    uint8_t p = state >> 8;
-
-    if (p > 254) { p = 254; }
-    if (p > 127) { p = 254 - p; }
-
-    p += p;
-
-    bool res = ((state & 0xFF) <= p);
-
-    state += delta;
-
-    return res;
-}
-
-/* Breathing animation */
-void LEDPulse()
-{
-    enum { START = 0x2000 };
-    static uint16_t pulse_state = START;
-
-    ++pulse_state;
-    if (pulse_state >= 0xFFFF - START) { pulse_state = START; }
-
-    uint16_t c;
-    if (btn.down()) {
-        c = led_rst_state;
-
-        if (led_rst_state > 0) {
-            led_rst_state -= 4;
-        }
-
-    } else {
-        c = pulse_state;
-    }
-
-    led_pwr::write(led_state(c));
-
-    if (led_rx_state[0]) { led_rx0::write(led_state(led_rx_state[0], -4)); }
-    if (led_rx_state[1]) { led_rx1::write(led_state(led_rx_state[1], -4)); }
-    if (led_rx_state[2]) { led_rx2::write(led_state(led_rx_state[2], -4)); }
-    if (led_rx_state[3]) { led_rx3::write(led_state(led_rx_state[3], -4)); }
-    if (led_rx_state[4]) { led_rxusb::write(led_state(led_rx_state[4], -4)); }
-
-    if (led_tx_state[0]) { led_tx0::write(led_state(led_tx_state[0], -4)); }
-    if (led_tx_state[1]) { led_tx1::write(led_state(led_tx_state[1], -4)); }
-    if (led_tx_state[2]) { led_tx2::write(led_state(led_tx_state[2], -4)); }
-    if (led_tx_state[3]) { led_tx3::write(led_state(led_tx_state[3], -4)); }
-    if (led_tx_state[4]) { led_txusb::write(led_state(led_tx_state[4], -4)); }
-}
-
-}
-
 ISR(TCD2_HUNF_vect)
 {
-    LEDPulse();
+    if (!btn.down()) {
+        pulse_state.write<led_pwr>();
+    } else {
+        rst_blink_state.write<led_pwr>();
+    }
+
+    rx_blink_state[0].write<led_rx0>();
+    rx_blink_state[1].write<led_rx1>();
+    rx_blink_state[2].write<led_rx2>();
+    rx_blink_state[3].write<led_rx3>();
+    rx_blink_state[4].write<led_rxusb>();
+
+    tx_blink_state[0].write<led_tx0>();
+    tx_blink_state[1].write<led_tx1>();
+    tx_blink_state[2].write<led_tx2>();
+    tx_blink_state[3].write<led_tx3>();
+    tx_blink_state[4].write<led_txusb>();
 }

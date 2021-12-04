@@ -127,7 +127,7 @@ ISR(PORTC_INT0_vect)
     } else {
         uart_c0::tx::low();
         uart_c1::tx::low();
-    }
 
-    midi::rx_ready = 1;
+        midi::rx_ready = 1;
+    }
 }

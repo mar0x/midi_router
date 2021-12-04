@@ -87,12 +87,12 @@ void init(void)
 
     btn_in::setup();
 
-    TCD2.INTCTRLA |= TC2_HUNFINTLVL_HI_gc; // enable HIGH underflow interrupt, pri level 3 (see 15.10.5 in AU manual)
+    TCD2.INTCTRLA |= TC2_HUNFINTLVL_MED_gc; // enable HIGH underflow interrupt, pri level 2 (see 15.10.5 in AU manual)
 }
 
 void powerdown(void)
 {
-    TCD2.INTCTRLA &= ~TC2_HUNFINTLVL_HI_gc; // enable HIGH underflow interrupt, pri level 3 (see 15.10.5 in AU manual)
+    TCD2.INTCTRLA &= ~TC2_HUNFINTLVL_MED_gc; // disable HIGH underflow interrupt, pri level 2 (see 15.10.5 in AU manual)
 
     led_pwr::low();
     led_txusb::low();
@@ -117,15 +117,7 @@ void powerdown(void)
 
 void wakeup(void)
 {
-    TCD2.INTCTRLA |= TC2_HUNFINTLVL_HI_gc; // enable HIGH underflow interrupt, pri level 3 (see 15.10.5 in AU manual)
-}
-
-void com_error(void)
-{
-}
-
-void com_overflow(void)
-{
+    TCD2.INTCTRLA |= TC2_HUNFINTLVL_MED_gc; // enable HIGH underflow interrupt, pri level 2 (see 15.10.5 in AU manual)
 }
 
 bool btn_update(unsigned long t) {

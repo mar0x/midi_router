@@ -210,9 +210,19 @@ void process_serial_cmd(uint8_t port) {
         cdc_println(port, "SN ", version.sn());
         break;
 
-    case serial_cmd_t::CMD_HARDWARE:
+    case serial_cmd_t::CMD_HARDWARE: {
+/*
+        char v[10];
+
+        if (serial_cmd.get_arg(1, v)) {
+            nvm_eeprom_erase_and_write_buffer(EEPROM_START, v, sizeof(v));
+
+            version.hw(v);
+        }
+*/
         cdc_println(port, "HW ", version.hw());
         break;
+    }
 
     default:
         cdc_println(port, "ERR");
@@ -525,6 +535,10 @@ void main_read_serial() {
     }
 
     version.sn(serial_str);
+
+    char v[10];
+    nvm_eeprom_read_buffer(EEPROM_START, v, sizeof(v));
+    version.hw(v);
 }
 
 }

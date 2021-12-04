@@ -47,14 +47,6 @@ void powerdown(void);
 //! \brief Exits the user interface of power down mode
 void wakeup(void);
 
-/*! \brief Called when a communication error occur
- */
-void com_error(void);
-
-/*! \brief Called when a overflow occur
- */
-void com_overflow(void);
-
 bool btn_update(unsigned long t);
 bool btn_down();
 
