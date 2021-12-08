@@ -8,19 +8,15 @@ struct serial_cmd_t {
 
     enum {
         CMD_UNKNOWN,
-        CMD_DEBUG_LEVEL,        // DL l
         CMD_VERSION,            // V
-        CMD_ECHO,               // E e
-        CMD_FACTORY_RESET,      // FR v
-        CMD_MIDI_MON,           // MM p
-        CMD_MIDI_MON_IN,        // MMI p
-        CMD_MIDI_MON_OUT,       // MMO p
+        CMD_MIDI_MON,           // M
         CMD_UPTIME,             // U
-        CMD_PORTS,              // P n
+        CMD_PORT_STAT,          // P
+        CMD_PORT_STAT_RESET,    // R
         CMD_HELP,               // ?
 
-        CMD_SERIAL_NUMBER,      // SN
-        CMD_HARDWARE,           // HW
+        CMD_SERIAL_NUMBER,      // S
+        CMD_HARDWARE,           // H
 
         MAX_SIZE = 50,
         MAX_ARGS = 5,
@@ -140,6 +136,10 @@ struct serial_cmd_t {
         return get_num(n, v);
     }
 
+    bool get_arg(uint8_t n, uint32_t& v) {
+        return get_num(n, v);
+    }
+
     template<typename T>
     bool get_arg(uint8_t n, T& v) {
         if (n >= arg_size_) {
@@ -218,9 +218,6 @@ serial_cmd_t::parse() {
         if (in_quote && in_quote == b) {
             a->end = i;
 
-            //debug(7, "arg #", arg_size_, ", start ", a->start, ", end ", a->end);
-            //log_window::println("arg #", arg_size_, ", start ", a->start, ", end ", a->end);
-
             arg_size_++;
             a++;
 
@@ -240,8 +237,6 @@ serial_cmd_t::parse() {
 
             a->end = i;
 
-            //log_window::println("arg #", arg_size_, ", start ", a->start, ", end ", a->end);
-
             arg_size_++;
             a++;
 
@@ -257,8 +252,6 @@ serial_cmd_t::parse() {
 
         a->end = size_;
 
-        //log_window::println("arg #", arg_size_, ", start ", a->start, ", end ", a->end);
-
         arg_size_++;
     }
 
@@ -268,41 +261,26 @@ serial_cmd_t::parse() {
 
         switch (a->end - a->start) {
         case 1:
-            if (b[0] == 'V') { command_ = CMD_VERSION; }
-            if (b[0] == 'E') { command_ = CMD_ECHO; }
             if (b[0] == '?') { command_ = CMD_HELP; }
-            break;
-
-        case 2:
-            if (b[0] == 'D' && b[1] == 'L') { command_ = CMD_DEBUG_LEVEL; }
-            if (b[0] == 'F' && b[1] == 'R') { command_ = CMD_FACTORY_RESET; }
-            if (b[0] == 'S' && b[1] == 'N') { command_ = CMD_SERIAL_NUMBER; }
-            if (b[0] == 'H' && b[1] == 'W') { command_ = CMD_HARDWARE; }
-            if (b[0] == 'M' && b[1] == 'M') { command_ = CMD_MIDI_MON; }
-            break;
-
-        case 3:
-            if (b[0] == 'M' && b[1] == 'M' && b[2] == 'I') { command_ = CMD_MIDI_MON_IN; }
-            if (b[0] == 'M' && b[1] == 'M' && b[2] == 'O') { command_ = CMD_MIDI_MON_OUT; }
+            if (b[0] == 'H') { command_ = CMD_HARDWARE; }
+            if (b[0] == 'M') { command_ = CMD_MIDI_MON; }
+            if (b[0] == 'P') { command_ = CMD_PORT_STAT; }
+            if (b[0] == 'R') { command_ = CMD_PORT_STAT_RESET; }
+            if (b[0] == 'S') { command_ = CMD_SERIAL_NUMBER; }
+            if (b[0] == 'U') { command_ = CMD_UPTIME; }
+            if (b[0] == 'V') { command_ = CMD_VERSION; }
             break;
         }
     }
 }
 
-//static const char help_[] PROGMEM = R"HELP(
-
 static PROGMEM_DECLARE(char, help_[]) = R"HELP(
- Settings:
-DL [<L>] - debug level
-E [1/0] - echo
 V - show version
+S - serial number
+H - hardware revision
 
-MM - MIDI monitor
-MMI - monitor IN
-MMO - monitor OUT
-
+M - MIDI monitor
 U - show uptime
-P [<N>] - port info
-
-FR <V> - factory reset
+P [s] [R] - port stats, every s sec, R - auto reset
+R - reset port stats
 )HELP";

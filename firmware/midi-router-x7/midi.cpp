@@ -5,32 +5,25 @@
 
 namespace {
 
-using uart_c0 = uart_t<port::C0, 31250>;
-template<> uart_c0::rx_ring_t uart_c0::rx_ring = {};
+using uart_c0 = uart_t<port::C0, 31250, rx_midi_traits<0, port::C0> >;
 template<> uart_c0::tx_ring_t uart_c0::tx_ring = {};
 
-using uart_c1 = uart_t<port::C1, 31250>;
-template<> uart_c1::rx_ring_t uart_c1::rx_ring = {};
+using uart_c1 = uart_t<port::C1, 31250, rx_midi_traits<1, port::C1> >;
 template<> uart_c1::tx_ring_t uart_c1::tx_ring = {};
 
-using uart_d0 = uart_t<port::D0, 31250>;
-template<> uart_d0::rx_ring_t uart_d0::rx_ring = {};
+using uart_d0 = uart_t<port::D0, 31250, rx_midi_traits<2, port::D0> >;
 template<> uart_d0::tx_ring_t uart_d0::tx_ring = {};
 
-using uart_e0 = uart_t<port::E0, 31250>;
-template<> uart_e0::rx_ring_t uart_e0::rx_ring = {};
+using uart_e0 = uart_t<port::E0, 31250, rx_midi_traits<3, port::E0> >;
 template<> uart_e0::tx_ring_t uart_e0::tx_ring = {};
 
-using uart_e1 = uart_t<port::E1, 31250>;
-template<> uart_e1::rx_ring_t uart_e1::rx_ring = {};
+using uart_e1 = uart_t<port::E1, 31250, rx_midi_traits<4, port::E1> >;
 template<> uart_e1::tx_ring_t uart_e1::tx_ring = {};
 
-using uart_f0 = uart_t<port::F0, 31250>;
-template<> uart_f0::rx_ring_t uart_f0::rx_ring = {};
+using uart_f0 = uart_t<port::F0, 31250, rx_midi_traits<5, port::F0> >;
 template<> uart_f0::tx_ring_t uart_f0::tx_ring = {};
 
-using uart_f1 = uart_t<port::F1, 31250>;
-template<> uart_f1::rx_ring_t uart_f1::rx_ring = {};
+using uart_f1 = uart_t<port::F1, 31250, rx_midi_traits<6, port::F1> >;
 template<> uart_f1::tx_ring_t uart_f1::tx_ring = {};
 
 }
@@ -79,20 +72,6 @@ void splitter() {
     PORTC.INTCTRL = PORT_INT0LVL_HI_gc;
 }
 
-bool port_read(uint8_t port, uint8_t &data) {
-    switch (port) {
-    case 0: return uart_c0::bread(data);
-    case 1: return uart_c1::bread(data);
-    case 2: return uart_d0::bread(data);
-    case 3: return uart_e0::bread(data);
-    case 4: return uart_e1::bread(data);
-    case 5: return uart_f0::bread(data);
-    case 6: return uart_f1::bread(data);
-    }
-
-    return false;
-}
-
 uint8_t send(uint8_t port, const uint8_t *buf, uint8_t size) {
     switch (port) {
     case 0: return uart_c0::write_buf(buf, size);
@@ -109,14 +88,9 @@ uint8_t send(uint8_t port, const uint8_t *buf, uint8_t size) {
 
 }
 
-using namespace midi;
-
 ISR(USARTC0_RXC_vect)
 {
     uart_c0::on_rxc_int();
-
-    port_ready[0] = true;
-    rx_ready = 0;
 }
 
 ISR(USARTC0_DRE_vect)
@@ -128,9 +102,6 @@ ISR(USARTC0_DRE_vect)
 ISR(USARTC1_RXC_vect)
 {
     uart_c1::on_rxc_int();
-
-    port_ready[1] = true;
-    rx_ready = 1;
 }
 
 ISR(USARTC1_DRE_vect)
@@ -142,9 +113,6 @@ ISR(USARTC1_DRE_vect)
 ISR(USARTD0_RXC_vect)
 {
     uart_d0::on_rxc_int();
-
-    port_ready[2] = true;
-    rx_ready = 2;
 }
 
 ISR(USARTD0_DRE_vect)
@@ -175,7 +143,7 @@ ISR(PORTC_INT0_vect)
         uart_f0::tx::low();
         uart_f1::tx::low();
 
-        rx_ready = 1;
+        midi::rx_ready = 1;
     }
 }
 
@@ -183,9 +151,6 @@ ISR(PORTC_INT0_vect)
 ISR(USARTE0_RXC_vect)
 {
     uart_e0::on_rxc_int();
-
-    port_ready[3] = true;
-    rx_ready = 3;
 }
 
 ISR(USARTE0_DRE_vect)
@@ -197,9 +162,6 @@ ISR(USARTE0_DRE_vect)
 ISR(USARTE1_RXC_vect)
 {
     uart_e1::on_rxc_int();
-
-    port_ready[4] = true;
-    rx_ready = 4;
 }
 
 ISR(USARTE1_DRE_vect)
@@ -211,9 +173,6 @@ ISR(USARTE1_DRE_vect)
 ISR(USARTF0_RXC_vect)
 {
     uart_f0::on_rxc_int();
-
-    port_ready[5] = true;
-    rx_ready = 5;
 }
 
 ISR(USARTF0_DRE_vect)
@@ -225,9 +184,6 @@ ISR(USARTF0_DRE_vect)
 ISR(USARTF1_RXC_vect)
 {
     uart_f1::on_rxc_int();
-
-    port_ready[6] = true;
-    rx_ready = 6;
 }
 
 ISR(USARTF1_DRE_vect)

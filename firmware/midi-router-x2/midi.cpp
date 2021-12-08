@@ -5,12 +5,10 @@
 
 namespace {
 
-using uart_c0 = uart_t<port::C0, 31250>;
-template<> uart_c0::rx_ring_t uart_c0::rx_ring = {};
+using uart_c0 = uart_t<port::C0, 31250, rx_midi_traits<0, port::C0> >;
 template<> uart_c0::tx_ring_t uart_c0::tx_ring = {};
 
-using uart_c1 = uart_t<port::C1, 31250>;
-template<> uart_c1::rx_ring_t uart_c1::rx_ring = {};
+using uart_c1 = uart_t<port::C1, 31250, rx_midi_traits<1, port::C1> >;
 template<> uart_c1::tx_ring_t uart_c1::tx_ring = {};
 
 }
@@ -39,15 +37,6 @@ void splitter() {
     PORTC.INTCTRL = PORT_INT0LVL_HI_gc;
 }
 
-bool port_read(uint8_t port, uint8_t &data) {
-    switch (port) {
-    case 0: return uart_c0::bread(data);
-    case 1: return uart_c1::bread(data);
-    }
-
-    return false;
-}
-
 uint8_t send(uint8_t port, const uint8_t *buf, uint8_t size) {
     switch (port) {
     case 0: return uart_c0::write_buf(buf, size);
@@ -59,14 +48,10 @@ uint8_t send(uint8_t port, const uint8_t *buf, uint8_t size) {
 
 }
 
-using namespace midi;
 
 ISR(USARTC0_RXC_vect)
 {
     uart_c0::on_rxc_int();
-
-    port_ready[0] = true;
-    rx_ready = 0;
 }
 
 ISR(USARTC0_DRE_vect)
@@ -78,9 +63,6 @@ ISR(USARTC0_DRE_vect)
 ISR(USARTC1_RXC_vect)
 {
     uart_c1::on_rxc_int();
-
-    port_ready[1] = true;
-    rx_ready = 1;
 }
 
 ISR(USARTC1_DRE_vect)
@@ -102,6 +84,6 @@ ISR(PORTC_INT0_vect)
         uart_c0::tx::low();
         uart_c1::tx::low();
 
-        rx_ready = 1;
+        midi::rx_ready = 1;
     }
 }

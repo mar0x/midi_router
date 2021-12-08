@@ -26,6 +26,7 @@ struct ring {
 
     bool empty() const { return begin == end; }
     bool full() const { return begin == (end + 1) % MAX; }
+    index_t size() const { return (end + MAX - begin) % MAX; }
 
     void reset() {
         begin = 0;

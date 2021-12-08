@@ -13,14 +13,18 @@ struct pulse_state_t : public blink_state_t {
     }
 
     void next() {
-        ++state;
+        state += STEP / 4;
 
         if (state >= MAX) { state = START; }
     }
 
     template<typename T>
     void write() {
-        T::write(get());
+        bool v = get();
+        if (v != last_write) {
+            last_write = v;
+            T::write(v);
+        }
 
         next();
     }

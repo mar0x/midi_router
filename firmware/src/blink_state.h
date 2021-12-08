@@ -5,10 +5,10 @@
 struct blink_state_t {
     enum {
         START = 0x8000,
-        MIN = 0x2000,
-        ACTIVE = 0x1800,
+        MIN = 0x1000,
+        ACTIVE = 0x1000,
         MIN_ACTIVE = ACTIVE - 0x100,
-        STEP = -4,
+        STEP = 0x40,
     };
 
     static bool get(uint16_t state) {
@@ -29,7 +29,7 @@ struct blink_state_t {
 
     void stop() { state = 0; }
     void active() {
-        active_state = 0x200;
+        active_state = 0x80 * STEP;
 
         if (state < MIN_ACTIVE) { state = ACTIVE; }
     }
@@ -37,18 +37,22 @@ struct blink_state_t {
     operator bool() const { return state != 0; }
 
     void next() {
-        state -= 4;
+        state -= STEP;
 
         if (active_state && state < MIN_ACTIVE) {
             state += 0x100;
-            active_state -= 4;
+            active_state -= STEP;
         }
     }
 
     template<typename T>
     void write() {
         if (state) {
-            T::write(get());
+            bool v = get();
+            if (v != last_write) {
+                last_write = v;
+                T::write(v);
+            }
 
             next();
         }
@@ -56,4 +60,5 @@ struct blink_state_t {
 
     uint16_t state = 0;
     uint16_t active_state = 0;
+    bool last_write = false;
 };

@@ -105,7 +105,6 @@ void main_cdc_config(uint8_t port, usb_cdc_line_coding_t * cfg);
 
 const uint8_t *main_serial_name(void);
 
-
 #ifdef __cplusplus
 }
 #endif

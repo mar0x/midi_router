@@ -70,7 +70,7 @@ void timer_init(TC2_t *t)
 
     t->LPER = 255; // count 255 to 0 (total period = 256)
 //  t->HPER = 255;
-    t->HPER = 15;
+    t->HPER = 255;
 
     // pre-assign comparison registers to 'zero' (for PWM out) which is actually 255
     // 'timer 2' counts DOWN.  This, however, would generate a '1' output.

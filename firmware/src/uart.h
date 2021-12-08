@@ -239,20 +239,47 @@ struct baud_traits<31250, 16000000> {
     enum { ctrla = 0x1F, ctrlb = 0x00, };
 };
 
+template<uint16_t MAX, typename T, typename PORT>
+struct rx_ring_traits {
+    using port_t = PORT;
+    using rx_ring_t = ring<MAX, T>;
+
+    static bool ring_read(uint8_t &b) {
+        if (!rx_ring.empty()) {
+            b = rx_ring.pop_front();
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool on_rx(uint8_t d) {
+        if (!rx_ring.full()) {
+            rx_ring.push_back(d);
+            return true;
+        }
+
+        return false;
+    }
+
+private:
+    static rx_ring_t rx_ring;
+};
+
 template<
     typename PORT, unsigned long RATE,
+    typename RX_TRAITS = rx_ring_traits<64, uint8_t, PORT>,
     typename PORT_TRAITS = port::traits<PORT>,
     typename BAUD_TRAITS = baud_traits<RATE, F_CPU>,
-    typename RX_RING = ring<64, uint8_t>,
     typename TX_RING = ring<64, uint8_t> >
-struct uart_t {
+struct uart_t : public RX_TRAITS {
+    using rx_traits = RX_TRAITS;
     using port_traits = PORT_TRAITS;
     using baud_traits = BAUD_TRAITS;
 
     using rx = typename port_traits::rx;
     using tx = typename port_traits::tx;
 
-    using rx_ring_t = RX_RING;
     using tx_ring_t = TX_RING;
 
     static USART_t& uart() { return port_traits::uart(); }
@@ -290,16 +317,7 @@ struct uart_t {
         uart().CTRLB = 0;
     }
 
-    static bool bread(uint8_t &b) {
-        if (!rx_ring.empty()) {
-            b = rx_ring.pop_front();
-            return true;
-        }
-
-        return false;
-    }
-
-    static uint8_t bwrite(uint8_t b) {
+    static uint8_t ring_write(uint8_t b) {
         if (tx_ring.full()) {
             return 1;
         } else {
@@ -309,7 +327,7 @@ struct uart_t {
         return 0;
     }
 
-    static uint8_t bwrite(const void *d, uint8_t s) {
+    static uint8_t ring_write(const void *d, uint8_t s) {
         const uint8_t *c = (const uint8_t *) d;
 
         while (s != 0) {
@@ -326,7 +344,7 @@ struct uart_t {
         return s;
     }
 
-    static void bflush() {
+    static void ring_flush() {
         while (dre() && !tx_ring.empty()) { data(tx_ring.pop_front()); }
 
         if (!tx_ring.empty()) { dre_int_hi(); }
@@ -339,21 +357,23 @@ struct uart_t {
             return 1;
         }
 
+        uint8_t res;
+
         crit_sec cs;
 
-        uint8_t res = s - bwrite(d, s);
+        if (tx_ring.capacity - tx_ring.size() > s) {
+            res = s - ring_write(d, s);
 
-        bflush();
+            ring_flush();
+        } else {
+            res = 0;
+        }
 
         return res;
     }
 
     static void on_rxc_int() {
-        rx_ring_t& rx_r = rx_ring;
-
-        if (!rx_r.full()) {
-            rx_r.push_back(data());
-        }
+        rx_traits::on_rx(data());
     }
 
     static void on_dre_int() {
@@ -366,6 +386,5 @@ struct uart_t {
     }
 
 private:
-    static rx_ring_t rx_ring;
     static tx_ring_t tx_ring;
 };
