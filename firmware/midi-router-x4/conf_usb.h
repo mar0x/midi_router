@@ -58,7 +58,7 @@
 //	(USB_CONFIG_ATTR_REMOTE_WAKEUP|USB_CONFIG_ATTR_BUS_POWERED)
 
 //! USB Device string definitions (Optional)
-#define  USB_DEVICE_MANUFACTURE_NAME      "MIDI-Lab.ru"
+#define  USB_DEVICE_MANUFACTURE_NAME      "MVR-Electronic.ru"
 #define  USB_DEVICE_PRODUCT_NAME          "MIDI Router x4"
 #define  USB_DEVICE_GET_SERIAL_NAME_POINTER  main_serial_name()
 #define  USB_DEVICE_GET_SERIAL_NAME_LENGTH   16 /* 2 * sizeof(struct nvm_device_serial) */
