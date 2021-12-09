@@ -575,14 +575,14 @@ void usb_midi_flush();
 
 void usb_midi_sent(udd_ep_status_t status, iram_size_t n, udd_ep_id_t ep)
 {
-    if (status != UDD_EP_TRANSFER_OK) {
+    if (status == UDD_EP_TRANSFER_OK) {
+        midi::port_stat[MIDI_PORTS].snd_msgs += n / sizeof(usb_midi_event_t);
+        midi::port_stat[MIDI_PORTS].snd_bytes += n;
+    } else {
         ++midi::port_stat[MIDI_PORTS].stall_msgs;
     }
 
     usb_send_busy = false;
-
-    midi::port_stat[MIDI_PORTS].snd_msgs += n / sizeof(usb_midi_event_t);
-    midi::port_stat[MIDI_PORTS].snd_bytes += n;
 
     if (!usb_send_buf[usb_send_active].empty()) {
         usb_midi_flush();
