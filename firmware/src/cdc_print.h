@@ -5,20 +5,22 @@ namespace {
 
 bool cdc_dtr = false;
 
-void _cdc_print_eol();
-void cdc_print_eol();
+void _cdc_print_eol() __attribute__((unused));
+void cdc_print_eol() __attribute__((unused));
 
-void _cdc_println();
-void cdc_println();
+void _cdc_println() __attribute__((unused));
+void cdc_println() __attribute__((unused));
 
 template<typename T> void _cdc_print(T n);
 template<typename T> void cdc_print(T n);
 
-void _cdc_print(char c);
-void cdc_print(char c);
+void _cdc_print(char c) __attribute__((unused));
+void cdc_print(char c) __attribute__((unused));
 
-void _cdc_print(const char *s);
-void cdc_print(const char *s);
+void _cdc_print(const char *s) __attribute__((unused));
+void cdc_print(const char *s) __attribute__((unused));
+
+void cdc_prompt() __attribute__((unused));
 
 template<typename T>
 void _cdc_println(T n) {
