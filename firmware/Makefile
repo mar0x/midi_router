@@ -40,6 +40,13 @@ $(1)-upload-dfu: $(1)-$(2)-upload-dfu
 $(1)-$(2)-upload-dfu:
 	$(MAKE) -f $(MAKEFILE_PATH) BOARD=$(1) MCU=$(2) upload-dfu
 
+
+.PHONY: $(1)-bin $(1)-$(2)-bin
+$(1)-bin: $(1)-$(2)-bin
+
+$(1)-$(2)-bin: $(1)/$(2)/$(1)-$(2).hex
+	cp $$< bin/$(1)-$(2).ihex
+
 endef
 
 
