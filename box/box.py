@@ -46,6 +46,9 @@ if midi_sock_count == 7:
     usb_width = 12
     usb_height = 11
 
+    rst_hole_z = 4 # above board
+    rst_hole_y = 0 # from center line
+
 if midi_sock_count == 4:
     board_length = 96
     board_width = 50
@@ -84,6 +87,9 @@ if midi_sock_count == 4:
     usb_led_step = 6
     usb_width = 12
     usb_height = 11
+
+    rst_hole_z = 14 # above board
+    rst_hole_y = 7 # from center line
 
 
 if midi_sock_count == 1:
@@ -146,6 +152,8 @@ board_top_shift = - (box_outer_height - fillet_r) / 2 - fillet_r + (box_thicknes
 
 usb_z_shift = box_thickness + base_stand_h + board_thickness + usb_height / 2
 
+rst_hole_d = 2
+
 
 # New method to render script results using the CadQuery Gateway Interface
 # Use the following to render your model with grey RGB and no transparency
@@ -186,6 +194,11 @@ base = base.faces(">Y").workplane(centerOption="CenterOfBoundBox") \
         .center(0, board_top_shift + midi_sock_shift) \
         .rarray(midi_sock_step, 1, midi_sock_count, 1, True) \
         .hole(midi_sock_d)
+
+# making rst hole
+base = base.faces(">X").workplane(centerOption="CenterOfBoundBox") \
+        .center(rst_hole_y, board_top_shift + rst_hole_z) \
+        .hole(rst_hole_d, box_thickness)
 
 midi_led_plane = base.faces(">Y").workplane(centerOption="CenterOfBoundBox") \
         .center(0, board_top_shift + led_shift) \
