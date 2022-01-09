@@ -8,7 +8,7 @@ upload-flip2: $(project).hex
 
 .PHONY: upload-mk2
 upload-mk2: $(project).hex
-	$(AVRDUDE) -c avrispmkII -D -U application:w:$<:i
+	$(AVRDUDE) -c avrispmkII -U application:w:$<:i
 
 .PHONY: upload-dfu
 upload-dfu: bin/dfu-$(MCU)-$(BOARD).ihex
@@ -16,3 +16,14 @@ upload-dfu: bin/dfu-$(MCU)-$(BOARD).ihex
     -U flash:w:$<:i \
     -U fuse2:w:0xbf:m
 
+.PHONY: upload-hw
+upload-hw: bin/hw-$(BOARD).ihex
+	$(AVRDUDE) -c avrispmkII -U eeprom:w:$<:i
+
+.PHONY: upload
+upload: bin/dfu-$(MCU)-$(BOARD).ihex bin/hw-$(BOARD).ihex $(project).hex
+	$(AVRDUDE) -c avrispmkII \
+    -U flash:w:bin/dfu-$(MCU)-$(BOARD).ihex:i \
+    -U fuse2:w:0xbf:m \
+    -U eeprom:w:bin/hw-$(BOARD).ihex:i \
+    -U application:w:$(project).hex:i

@@ -41,6 +41,20 @@ $(1)-$(2)-upload-dfu:
 	$(MAKE) -f $(MAKEFILE_PATH) BOARD=$(1) MCU=$(2) upload-dfu
 
 
+.PHONY: $(1)-upload-hw $(1)-$(2)-upload-hw
+$(1)-upload-hw: $(1)-$(2)-upload-hw
+
+$(1)-$(2)-upload-hw:
+	$(MAKE) -f $(MAKEFILE_PATH) BOARD=$(1) MCU=$(2) upload-hw
+
+
+.PHONY: $(1)-upload $(1)-$(2)-upload
+$(1)-upload: $(1)-$(2)-upload
+
+$(1)-$(2)-upload:
+	$(MAKE) -f $(MAKEFILE_PATH) BOARD=$(1) MCU=$(2) upload
+
+
 .PHONY: $(1)-bin $(1)-$(2)-bin
 $(1)-bin: $(1)-$(2)-bin
 
