@@ -5,6 +5,7 @@ import math
 
 #midi_sock_count = 7
 midi_sock_count = 4
+#midi_sock_count = 3  # Splitter x6
 #midi_sock_count = 1
 
 if midi_sock_count == 7:
@@ -22,13 +23,11 @@ if midi_sock_count == 7:
     screw_cup_hole_d = 5.5
     base_edge_height = 2
 
-    base_stand_hole_d = 3.0
     base_stand_h = 3
 
     cover_stand_d = base_stand_d
     cover_stand_d1 = 10
     cover_edge_height = 4
-    cover_stand_hole_d = 2.5
     cover_clearance = 0.2
 
     stand_x_step = 150
@@ -43,8 +42,6 @@ if midi_sock_count == 7:
     # or led_size = 2 for round hole
 
     usb_led_step = 20
-    usb_width = 12
-    usb_height = 11
 
     rst_hole_z = 4 # above board
     rst_hole_y = 0 # from center line
@@ -64,13 +61,11 @@ if midi_sock_count == 4:
     screw_cup_hole_d = 5.5
     base_edge_height = 1
 
-    base_stand_hole_d = 3.0
     base_stand_h = 3
 
-    cover_stand_d = 6
-    cover_stand_d1 = 8
+    cover_stand_d = base_stand_d
+    cover_stand_d1 = 10
     cover_edge_height = 1
-    cover_stand_hole_d = 2
     cover_clearance = 0.1
 
     stand_x_step = 85.5
@@ -85,11 +80,53 @@ if midi_sock_count == 4:
     # or led_size = (5.2, 2.7) for rect
 
     usb_led_step = 6
-    usb_width = 12
-    usb_height = 11
+    usb_led_count = 3
 
     rst_hole_z = 14 # above board
     rst_hole_y = 7 # from center line
+
+
+if midi_sock_count == 3:
+    board_length = 96
+    board_width = 50
+    board_thickness = 1.2
+    board_clearance = 0.6
+    board_corner_r = 3
+    fillet_r = 3
+
+    box_inner_height = 28
+    box_thickness = 2
+
+    base_stand_d = 8
+    screw_cup_hole_d = 5.5
+    base_edge_height = 1
+
+    base_stand_h = 3
+
+    cover_stand_d = base_stand_d
+    cover_stand_d1 = 10
+    cover_edge_height = 1
+    cover_clearance = 0.1
+
+    stand_x_step = 85.5
+    stand_y_step = 38.5
+    central_stand_x_step = 40
+
+    midi_sock_step = 20.32
+    midi_sock_d = 16
+    midi_sock_shift = 10 # above board
+    led_shift = midi_sock_shift + 5 # above board
+    led_size = 2 # round hole
+    # or led_size = (5.2, 2.7) for rect
+
+    usb_led_step = 6
+    usb_led_count = 1
+    usb_y_shift = -10
+    usb_led_shift = 6.5
+
+    # MIDI IN led hole
+    rst_hole_z = midi_sock_shift # above board
+    rst_hole_y = -12.7 # from center line
 
 
 if midi_sock_count == 1:
@@ -107,13 +144,11 @@ if midi_sock_count == 1:
     screw_cup_hole_d = 4
     base_edge_height = 1
 
-    base_stand_hole_d = 2.2
     base_stand_h = 3
 
     cover_stand_d = base_stand_d
     cover_stand_d1 = 8
     cover_edge_height = 1
-    cover_stand_hole_d = 1.5
     cover_clearance = 0.1
 
     stand_x_step = 25.5
@@ -128,8 +163,7 @@ if midi_sock_count == 1:
     # or led_size = (5.2, 2.7) for rect
 
     usb_led_step = 6
-    usb_width = 12
-    usb_height = 11
+    usb_led_count = 3
 
 
 box_inner_length = board_length + 2 * board_clearance
@@ -139,7 +173,15 @@ box_outer_length = box_inner_length + 2 * box_thickness
 box_outer_width = box_inner_width + 2 * box_thickness
 box_outer_height = box_inner_height + box_thickness
 
-cover_stand_h = box_inner_height + 1 - base_stand_h - board_thickness
+# 2.6 x 12 mm screw (d=4.0 mm head)
+# base_stand_hole_d = 3.0
+# cover_stand_hole_d = 2.5
+
+# 2.3 x 12 mm screw (d=3.6 mm head)
+base_stand_hole_d = 2.6
+cover_stand_hole_d = 2.2
+
+cover_stand_h = box_inner_height + 1 - base_stand_h - board_thickness - 0.3
 
 edge_center_shift = (stand_x_step / 2) ** 2 + (stand_y_step / 2)  ** 2 - (central_stand_x_step / 2) ** 2
 edge_center_shift = edge_center_shift / stand_y_step
@@ -150,9 +192,18 @@ edge_rad = math.sqrt( (central_stand_x_step / 2) ** 2 + edge_center_shift ** 2)
 # face edge is fillet_r above 0
 board_top_shift = - (box_outer_height - fillet_r) / 2 - fillet_r + (box_thickness + base_stand_h + board_thickness)
 
-usb_z_shift = box_thickness + base_stand_h + board_thickness + usb_height / 2
+usb_width = 12
+usb_height = 11
+
+if 'usb_led_shift' not in locals():
+    usb_led_shift = led_shift
+
+if 'usb_y_shift' not in locals():
+    usb_y_shift = 0
 
 rst_hole_d = 2
+
+usb_z_shift = box_thickness + base_stand_h + board_thickness + usb_height / 2
 
 
 # New method to render script results using the CadQuery Gateway Interface
@@ -210,18 +261,26 @@ else:
     base = midi_led_plane.hole(led_size)
 
 usb_led_plane = base.faces("<X").workplane(centerOption="CenterOfBoundBox") \
-        .center(0, board_top_shift + led_shift) \
-        .rarray(usb_led_step, 1, 3, 1, True)
+        .center(0, board_top_shift + usb_led_shift) \
+        .rarray(usb_led_step, 1, usb_led_count, 1, True)
 
 if isinstance(led_size, (list, tuple)):
     base = usb_led_plane.rect(*led_size).cutBlind(-box_thickness)
 else:
     base = usb_led_plane.hole(led_size, box_thickness)
 
+if midi_sock_count == 3:
+    base = base.faces(">X").workplane(centerOption="CenterOfBoundBox") \
+        .center(0, board_top_shift + midi_sock_shift) \
+        .hole(midi_sock_d, box_thickness) \
+        .faces("<X").workplane(centerOption="CenterOfBoundBox") \
+        .center(-9, board_top_shift + 6.5) \
+        .hole(7, box_thickness) \
+
 usb = cq.Workplane("YZ").rect(usb_width, usb_height) \
         .extrude(-box_thickness) \
         .edges("|X").fillet(1) \
-        .translate((-box_inner_length / 2, 0, usb_z_shift))
+        .translate((-box_inner_length / 2, usb_y_shift, usb_z_shift))
 
 base = base.cut(usb)
 
@@ -256,6 +315,14 @@ for p in stand_centers:
 stands = stands.faces(">Z").workplane(centerOption="CenterOfBoundBox") \
         .pushPoints(stand_centers) \
         .hole(cover_stand_hole_d)
+
+if midi_sock_count == 4 or midi_sock_count == 3:
+    stands = stands.cut(
+        cq.Workplane("XY").rect(94, 30 + 1).extrude(led_shift) \
+        .union(
+            cq.Workplane("XY").rect(76 + 1, 44).extrude(led_shift)
+        ) \
+        .translate((0, 0, -cover_stand_h - 1)))
 
 i = cq.Workplane("XY") \
         .rect(box_inner_length - 2 * cover_clearance, box_inner_width - 2 * cover_clearance) \
