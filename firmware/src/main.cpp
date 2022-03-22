@@ -67,8 +67,10 @@ uint32_t stat_period = 0;
 bool stat_auto_reset = 0;
 midi_cmd_t current_cmd[MIDI_PORTS];
 
-void usb_midi_dispatch(const midi_cmd_t& c, uint8_t jack);
-bool midi_dispatch(const usb_midi_event_t &ev, bool stall);
+template<typename T>
+void usb_midi_send(const T& c, uint8_t jack);
+bool midi_send(const usb_midi_event_t &ev, uint8_t jack, bool stall);
+void midi_mon(uint8_t jack, bool dir_in, const uint8_t *b, uint8_t size);
 void usb_recv_process();
 
 void stat_print(bool auto_update);
@@ -150,10 +152,6 @@ int main(void)
             }
         }
 
-        if (!usb_recv_buf.empty()) {
-            usb_recv_process();
-        }
-
         if (last_dtr != cdc_dtr) {
             last_dtr = cdc_dtr;
 
@@ -187,23 +185,32 @@ void midi_process_byte(uint8_t port, uint8_t data) {
     if (is_midi_rt(data)) {
         midi_cmd_t cmd;
         cmd.read(data);
-        usb_midi_dispatch(cmd, port);
+
+        midi_mon(port, true, cmd, cmd.size());
+
+        usb_midi_send(cmd, port);
 
         ++midi::port_stat[port].rcv_msgs;
         return;
     }
 
     if (is_midi_cmd(data) && data != CMD_SYS_EX_END && current_cmd[port].sys_ex()) {
-        usb_midi_dispatch(current_cmd[port], port);
+        usb_midi_send(current_cmd[port], port);
         current_cmd[port].reset();
     }
 
     current_cmd[port].read(data);
     if (current_cmd[port].ready()) {
-        usb_midi_dispatch(current_cmd[port], port);
+        usb_midi_send(current_cmd[port], port);
         current_cmd[port].reset();
 
         ++midi::port_stat[port].rcv_msgs;
+    }
+}
+
+void midi_send_ready(uint8_t port, uint8_t size) {
+    if (!usb_recv_buf.empty()) {
+        usb_recv_process();
     }
 }
 
@@ -452,16 +459,14 @@ void stat_reset() {
     }
 }
 
-bool midi_dispatch(const usb_midi_event_t &ev, bool stall) {
+bool midi_send(const usb_midi_event_t &ev, uint8_t jack, bool stall) {
     uint8_t s = ev.size();
 
     if (s == 0) return true;
 
-    uint8_t jack = ev.jack();
-
     midi::port_stat_t &stat = midi::port_stat[jack];
 
-    uint8_t res = midi::send(jack, ev.data, s);
+    uint8_t res = midi::send(jack, ev, s);
 
     if (res != s) {
         if (stat.stall_start == 0) {
@@ -487,23 +492,7 @@ bool midi_dispatch(const usb_midi_event_t &ev, bool stall) {
         stat.stall_start = 0;
     }
 
-    if (cdc_dtr && midi::port_out_mon[jack]) {
-        iram_size_t csize = udi_cdc_get_free_tx_buffer();
-
-        if (csize >= (iram_size_t) (10 + 3 + 4 * s + 2) * 2) {
-            _cdc_print(millis(), ' ', 'o', jack, ' ', ev.byte1);
-
-            for (uint8_t i = 1; i < s; ++i) {
-                _cdc_print(' ', ev.data[i]);
-            }
-
-            _cdc_println();
-        } else {
-            if (csize >= 1) {
-                _cdc_print('.');
-            }
-        }
-    }
+    midi_mon(jack, false, ev, ev.size());
 
     if (ev.byte1 == CMD_SYS_ACTIVE_S) {
         ui::rx_usb_active();
@@ -546,7 +535,8 @@ bool udi_midi_enable(void) {
 
 void usb_recv_process() {
     while (!usb_recv_buf.empty()) {
-        if (midi_dispatch(usb_recv_buf.first(), usb_recv_buf.stall)) {
+        const usb_midi_event_t& ev = usb_recv_buf.first();
+        if (midi_send(ev, ev.jack(), usb_recv_buf.stall)) {
             usb_recv_buf.pop();
         } else {
             usb_recv_buf.set_stall();
@@ -606,15 +596,8 @@ void usb_midi_flush() {
     }
 }
 
-void usb_midi_dispatch(const midi_cmd_t& c, uint8_t jack)
-{
-    if (usb_send_buf[usb_send_active].full()) {
-        ++midi::port_stat[MIDI_PORTS].snd_ovf;
-        return;
-    }
 
-    usb_midi_event_t &ev = usb_send_buf[usb_send_active].push();
-
+inline void copy(usb_midi_event_t& ev, const midi_cmd_t& c, uint8_t jack) {
     switch (c.command()) {
     case 0:
     case CMD_SYS_EX:
@@ -669,15 +652,19 @@ void usb_midi_dispatch(const midi_cmd_t& c, uint8_t jack)
     ev.byte1 = c[0];
     ev.byte2 = c.size() > 1 ? c[1] : 0;
     ev.byte3 = c.size() > 2 ? c[2] : 0;
+}
 
-    if (cdc_dtr && midi::port_in_mon[jack]) {
+void midi_mon(uint8_t jack, bool dir_in, const uint8_t *b, uint8_t size) {
+    if (cdc_dtr &&
+        ((dir_in && midi::port_in_mon[jack]) ||
+         (!dir_in && midi::port_out_mon[jack]))) {
         iram_size_t csize = udi_cdc_get_free_tx_buffer();
 
-        if (csize >= (iram_size_t) (10 + 3 + 4 * c.size() + 2) * 2) {
-            _cdc_print(millis(), ' ', 'i', jack, ' ', c[0]);
+        if (csize >= (iram_size_t) (10 + 3 + 4 * size + 2) * 2) {
+            _cdc_print(millis(), ' ', dir_in ? 'i' : 'o', jack, ' ', b[0]);
 
-            for (uint8_t i = 1; i < c.size(); ++i) {
-                _cdc_print(' ', c[i]);
+            for (uint8_t i = 1; i < size; ++i) {
+                _cdc_print(' ', b[i]);
             }
 
             _cdc_println();
@@ -687,8 +674,28 @@ void usb_midi_dispatch(const midi_cmd_t& c, uint8_t jack)
             }
         }
     }
+}
 
-    if (c.command() == CMD_SYS_ACTIVE_S) {
+inline void copy(usb_midi_event_t& ev, const usb_midi_event_t& c, uint8_t jack) {
+    ev.header = (c.header & 0x0F) | (jack << 4);
+    ev.byte1 = c.byte1;
+    ev.byte2 = c.byte2;
+    ev.byte3 = c.byte3;
+}
+
+template<typename T>
+void usb_midi_send(const T& c, uint8_t jack)
+{
+    if (usb_send_buf[usb_send_active].full()) {
+        ++midi::port_stat[MIDI_PORTS].snd_ovf;
+        return;
+    }
+
+    usb_midi_event_t &ev = usb_send_buf[usb_send_active].push();
+
+    copy(ev, c, jack);
+
+    if (midi_cmd_t::command(c[0]) == CMD_SYS_ACTIVE_S) {
         ui::tx_usb_active();
     } else {
         ui::tx_usb_blink();

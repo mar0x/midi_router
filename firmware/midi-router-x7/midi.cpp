@@ -5,26 +5,33 @@
 
 namespace {
 
-using uart_c0 = uart_t<port::C0, 31250, rx_midi_traits<0, port::C0> >;
+using uart_c0 = uart_t<port::C0, 31250, rx_midi_traits<0>, tx_midi_traits<0> >;
 template<> uart_c0::tx_ring_t uart_c0::tx_ring = {};
+template<> uint8_t uart_c0::want_write = 0;
 
-using uart_c1 = uart_t<port::C1, 31250, rx_midi_traits<1, port::C1> >;
+using uart_c1 = uart_t<port::C1, 31250, rx_midi_traits<1>, tx_midi_traits<1> >;
 template<> uart_c1::tx_ring_t uart_c1::tx_ring = {};
+template<> uint8_t uart_c1::want_write = 0;
 
-using uart_d0 = uart_t<port::D0, 31250, rx_midi_traits<2, port::D0> >;
+using uart_d0 = uart_t<port::D0, 31250, rx_midi_traits<2>, tx_midi_traits<2> >;
 template<> uart_d0::tx_ring_t uart_d0::tx_ring = {};
+template<> uint8_t uart_d0::want_write = 0;
 
-using uart_e0 = uart_t<port::E0, 31250, rx_midi_traits<3, port::E0> >;
+using uart_e0 = uart_t<port::E0, 31250, rx_midi_traits<3>, tx_midi_traits<3> >;
 template<> uart_e0::tx_ring_t uart_e0::tx_ring = {};
+template<> uint8_t uart_e0::want_write = 0;
 
-using uart_e1 = uart_t<port::E1, 31250, rx_midi_traits<4, port::E1> >;
+using uart_e1 = uart_t<port::E1, 31250, rx_midi_traits<4>, tx_midi_traits<4> >;
 template<> uart_e1::tx_ring_t uart_e1::tx_ring = {};
+template<> uint8_t uart_e1::want_write = 0;
 
-using uart_f0 = uart_t<port::F0, 31250, rx_midi_traits<5, port::F0> >;
+using uart_f0 = uart_t<port::F0, 31250, rx_midi_traits<5>, tx_midi_traits<5> >;
 template<> uart_f0::tx_ring_t uart_f0::tx_ring = {};
+template<> uint8_t uart_f0::want_write = 0;
 
-using uart_f1 = uart_t<port::F1, 31250, rx_midi_traits<6, port::F1> >;
+using uart_f1 = uart_t<port::F1, 31250, rx_midi_traits<6>, tx_midi_traits<6> >;
 template<> uart_f1::tx_ring_t uart_f1::tx_ring = {};
+template<> uint8_t uart_f1::want_write = 0;
 
 }
 

@@ -5,17 +5,21 @@
 
 namespace {
 
-using uart_c0 = uart_t<port::C0, 31250, rx_midi_traits<2, port::C0> >;
+using uart_c0 = uart_t<port::C0, 31250, rx_midi_traits<2>, tx_midi_traits<2> >;
 template<> uart_c0::tx_ring_t uart_c0::tx_ring = {};
+template<> uint8_t uart_c0::want_write = 0;
 
-using uart_c1 = uart_t<port::C1, 31250, rx_midi_traits<3, port::C1> >;
+using uart_c1 = uart_t<port::C1, 31250, rx_midi_traits<3>, tx_midi_traits<3> >;
 template<> uart_c1::tx_ring_t uart_c1::tx_ring = {};
+template<> uint8_t uart_c1::want_write = 0;
 
-using uart_d0 = uart_t<port::D0, 31250, rx_midi_traits<0, port::D0> >;
+using uart_d0 = uart_t<port::D0, 31250, rx_midi_traits<0>, tx_midi_traits<0> >;
 template<> uart_d0::tx_ring_t uart_d0::tx_ring = {};
+template<> uint8_t uart_d0::want_write = 0;
 
-using uart_e0 = uart_t<port::E0, 31250, rx_midi_traits<1, port::E0> >;
+using uart_e0 = uart_t<port::E0, 31250, rx_midi_traits<1>, tx_midi_traits<1> >;
 template<> uart_e0::tx_ring_t uart_e0::tx_ring = {};
+template<> uint8_t uart_e0::want_write = 0;
 
 }
 
@@ -47,7 +51,7 @@ void splitter() {
     uart_d0::port_traits::setup_pins();
     uart_e0::port_traits::setup_pins();
 
-    PORTD.INT0MASK = (1 << 2);
+    PORTD.INT0MASK = uart_d0::port_traits::rx::traits::bit_mask;
     PORTD.INTCTRL = PORT_INT0LVL_HI_gc;
 }
 

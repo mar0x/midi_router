@@ -5,11 +5,13 @@
 
 namespace {
 
-using uart_c0 = uart_t<port::C0, 31250, rx_midi_traits<0, port::C0> >;
+using uart_c0 = uart_t<port::C0, 31250, rx_midi_traits<0>, tx_midi_traits<0> >;
 template<> uart_c0::tx_ring_t uart_c0::tx_ring = {};
+template<> uint8_t uart_c0::want_write = 0;
 
-using uart_c1 = uart_t<port::C1, 31250, rx_midi_traits<1, port::C1> >;
+using uart_c1 = uart_t<port::C1, 31250, rx_midi_traits<1>, tx_midi_traits<1> >;
 template<> uart_c1::tx_ring_t uart_c1::tx_ring = {};
+template<> uint8_t uart_c1::want_write = 0;
 
 }
 

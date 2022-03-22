@@ -4,6 +4,8 @@ extern "C" {
 #include "asf.h"
 }
 
+#include "ring.h"
+
 namespace midi {
 
 extern volatile uint8_t rx_ready;
@@ -58,15 +60,26 @@ void stop_mon();
 }
 
 extern void midi_process_byte(uint8_t port, uint8_t data);
+extern void midi_send_ready(uint8_t port, uint8_t size);
 
-template<uint8_t ID, typename PORT>
+template<uint8_t ID>
 struct rx_midi_traits {
     enum {
         id = ID,
     };
 
-    static void on_rx(uint8_t d) {
+    static inline void on_rx(uint8_t d) {
         midi_process_byte(id, d);
     }
 };
 
+template<uint8_t ID>
+struct tx_midi_traits {
+    enum {
+        id = ID,
+    };
+
+    static inline void tx_ready(uint8_t s) {
+        midi_send_ready(id, s);
+    }
+};

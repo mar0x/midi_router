@@ -21,14 +21,24 @@ struct traits<C0> {
     static USART_t& uart() { return USARTC0; }
 
     static void setup_pins() {
-        PORTC.PIN3CTRL = 0;
-        tx::output();
-        tx::high();
+        setup_rx();
+        setup_tx();
+        setup_pr();
+    }
 
+    static void setup_rx() {
         PORTC.PIN2CTRL = 0;
         rx::input();
         rx::pulldown();
+    }
 
+    static void setup_tx() {
+        PORTC.PIN3CTRL = 0;
+        tx::output();
+        tx::high();
+    }
+
+    static void setup_pr() {
         PR.PRPC &= ~PR_USART0_bm;
     }
 };
@@ -43,14 +53,24 @@ struct traits<C1> {
     static USART_t& uart() { return USARTC1; }
 
     static void setup_pins() {
-        PORTC.PIN7CTRL = 0;
-        tx::output();
-        tx::high();
+        setup_rx();
+        setup_tx();
+        setup_pr();
+    }
 
+    static void setup_rx() {
         PORTC.PIN6CTRL = 0;
         rx::input();
         rx::pulldown();
+    }
 
+    static void setup_tx() {
+        PORTC.PIN7CTRL = 0;
+        tx::output();
+        tx::high();
+    }
+
+    static void setup_pr() {
         PR.PRPC &= ~PR_USART1_bm;
     }
 };
@@ -65,14 +85,24 @@ struct traits<D0> {
     static USART_t& uart() { return USARTD0; }
 
     static void setup_pins() {
-        PORTD.PIN3CTRL = 0;
-        tx::output();
-        tx::high();
+        setup_rx();
+        setup_tx();
+        setup_pr();
+    }
 
+    static void setup_rx() {
         PORTD.PIN2CTRL = 0;
         rx::input();
         rx::pulldown();
+    }
 
+    static void setup_tx() {
+        PORTD.PIN3CTRL = 0;
+        tx::output();
+        tx::high();
+    }
+
+    static void setup_pr() {
         PR.PRPD &= ~PR_USART0_bm;
     }
 };
@@ -87,14 +117,24 @@ struct traits<E0> {
     static USART_t& uart() { return USARTE0; }
 
     static void setup_pins() {
-        PORTE.PIN3CTRL = 0;
-        tx::output();
-        tx::high();
+        setup_rx();
+        setup_tx();
+        setup_pr();
+    }
 
+    static void setup_rx() {
         PORTE.PIN2CTRL = 0;
         rx::input();
         rx::pulldown();
+    }
 
+    static void setup_tx() {
+        PORTE.PIN3CTRL = 0;
+        tx::output();
+        tx::high();
+    }
+
+    static void setup_pr() {
         PR.PRPE &= ~PR_USART0_bm;
     }
 };
@@ -112,14 +152,24 @@ struct traits<E1> {
     static USART_t& uart() { return USARTE1; }
 
     static void setup_pins() {
-        PORTE.PIN7CTRL = 0;
-        tx::output();
-        tx::high();
+        setup_rx();
+        setup_tx();
+        setup_pr();
+    }
 
+    static void setup_rx() {
         PORTE.PIN6CTRL = 0;
         rx::input();
         rx::pulldown();
+    }
 
+    static void setup_tx() {
+        PORTE.PIN7CTRL = 0;
+        tx::output();
+        tx::high();
+    }
+
+    static void setup_pr() {
         PR.PRPE &= ~PR_USART1_bm;
     }
 };
@@ -138,14 +188,24 @@ struct traits<F0> {
     static USART_t& uart() { return USARTF0; }
 
     static void setup_pins() {
-        PORTF.PIN3CTRL = 0;
-        tx::output();
-        tx::high();
+        setup_rx();
+        setup_tx();
+        setup_pr();
+    }
 
+    static void setup_rx() {
         PORTF.PIN2CTRL = 0;
         rx::input();
         rx::pulldown();
+    }
 
+    static void setup_tx() {
+        PORTF.PIN3CTRL = 0;
+        tx::output();
+        tx::high();
+    }
+
+    static void setup_pr() {
         PR.PRPF &= ~PR_USART0_bm;
     }
 };
@@ -164,14 +224,24 @@ struct traits<F1> {
     static USART_t& uart() { return USARTF1; }
 
     static void setup_pins() {
-        PORTF.PIN7CTRL = 0;
-        tx::output();
-        tx::high();
+        setup_rx();
+        setup_tx();
+        setup_pr();
+    }
 
+    static void setup_rx() {
         PORTF.PIN6CTRL = 0;
         rx::input();
         rx::pulldown();
+    }
 
+    static void setup_tx() {
+        PORTF.PIN7CTRL = 0;
+        tx::output();
+        tx::high();
+    }
+
+    static void setup_pr() {
         PR.PRPF &= ~PR_USART1_bm;
     }
 };
@@ -266,14 +336,20 @@ private:
     static rx_ring_t rx_ring;
 };
 
+struct tx_dummy_traits {
+    static inline void tx_ready(uint8_t s) { }
+};
+
 template<
     typename PORT, unsigned long RATE,
     typename RX_TRAITS = rx_ring_traits<64, uint8_t, PORT>,
+    typename TX_TRAITS = tx_dummy_traits,
     typename PORT_TRAITS = port::traits<PORT>,
     typename BAUD_TRAITS = baud_traits<RATE, F_CPU>,
     typename TX_RING = ring<64, uint8_t> >
 struct uart_t : public RX_TRAITS {
     using rx_traits = RX_TRAITS;
+    using tx_traits = TX_TRAITS;
     using port_traits = PORT_TRAITS;
     using baud_traits = BAUD_TRAITS;
 
@@ -317,41 +393,8 @@ struct uart_t : public RX_TRAITS {
         uart().CTRLB = 0;
     }
 
-    static uint8_t ring_write(uint8_t b) {
-        if (tx_ring.full()) {
-            return 1;
-        } else {
-            tx_ring.push_back(b);
-        }
-
-        return 0;
-    }
-
-    static uint8_t ring_write(const void *d, uint8_t s) {
-        const uint8_t *c = (const uint8_t *) d;
-
-        while (s != 0) {
-            if (tx_ring.full()) {
-                break;
-            }
-
-            tx_ring.push_back(*c);
-
-            ++c;
-            --s;
-        }
-
-        return s;
-    }
-
-    static void ring_flush() {
-        while (dre() && !tx_ring.empty()) { data(tx_ring.pop_front()); }
-
-        if (!tx_ring.empty()) { dre_int_hi(); }
-    }
-
     static uint8_t write_buf(const void *d, uint8_t s) {
-        if (s == 1 && tx_ring.empty() && dre()) {
+        if (s == 1 && tx_ring_empty() && dre()) {
             data(* (const uint8_t *) d);
 
             return 1;
@@ -361,12 +404,33 @@ struct uart_t : public RX_TRAITS {
 
         crit_sec cs;
 
-        if (tx_ring.capacity - tx_ring.size() > s) {
-            res = s - ring_write(d, s);
+        if (tx_ring_avail() > s) {
+            const uint8_t *c = (const uint8_t *) d;
 
-            ring_flush();
+            res = s;
+
+            if (tx_ring_empty() && dre()) {
+                data(*c);
+
+                ++c;
+                --s;
+            }
+
+            while (s != 0) {
+                tx_ring_push(*c);
+
+                ++c;
+                --s;
+            }
+
+            while (dre() && !tx_ring_empty()) { data(tx_ring_pop()); }
+
+            if (!tx_ring_empty()) { dre_int_hi(); }
+
+            want_write = 0;
         } else {
             res = 0;
+            want_write = s;
         }
 
         return res;
@@ -377,14 +441,23 @@ struct uart_t : public RX_TRAITS {
     }
 
     static void on_dre_int() {
-        if (!tx_ring.empty()) {
-            data(tx_ring.pop_front());
-            return;
-        }
+        if (!tx_ring_empty()) {
+            data(tx_ring_pop());
 
-        dre_int_off();
+            if (want_write && tx_ring_avail() > want_write) {
+                tx_traits::tx_ready(tx_ring_avail() - 1);
+            }
+        } else {
+            dre_int_off();
+        }
     }
+
+    static inline bool tx_ring_empty() { return tx_ring.empty(); }
+    static inline uint8_t tx_ring_pop() { return tx_ring.pop_front(); }
+    static inline void tx_ring_push(uint8_t b) { tx_ring.push_back(b); }
+    static inline uint8_t tx_ring_avail() { return tx_ring.capacity - tx_ring.size(); }
 
 private:
     static tx_ring_t tx_ring;
+    static uint8_t want_write;
 };

@@ -23,6 +23,7 @@ struct usb_midi_event_t {
 
         return cin2size[header & 0x0F];
     }
+    operator const uint8_t*() const { return data; }
 
     operator bool() const { return header != 0; }
 };
