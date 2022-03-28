@@ -48,6 +48,8 @@ using btn_in = artl::digital_in<artl::port::C, 1>;
 
 artl::button<> btn;
 
+bool led_test = false;
+
 }
 
 namespace ui {
@@ -111,6 +113,56 @@ void usb_midi_disable() {
     led_txusb::high();
 }
 
+void led_test_enable() {
+    if (led_test) return;
+
+    led_test = true;
+
+    led_pwr::high();
+    led_txusb::high();
+    led_rxusb::high();
+
+    led_rx0::high();
+    led_rx1::high();
+    led_rx2::high();
+    led_rx3::high();
+
+    led_tx0::high();
+    led_tx1::high();
+    led_tx2::high();
+    led_tx3::high();
+}
+
+void led_test_disable() {
+    if (!led_test) return;
+
+    led_test = false;
+
+    if (!btn.down()) {
+        pulse_state.force_write<led_pwr>();
+    } else {
+        rst_blink_state.force_write<led_pwr>();
+    }
+
+    rx_blink_state[0].force_write<led_rx0>();
+    rx_blink_state[1].force_write<led_rx1>();
+    rx_blink_state[2].force_write<led_rx2>();
+    rx_blink_state[3].force_write<led_rx3>();
+
+    tx_blink_state[0].force_write<led_tx0>();
+    tx_blink_state[1].force_write<led_tx1>();
+    tx_blink_state[2].force_write<led_tx2>();
+    tx_blink_state[3].force_write<led_tx3>();
+
+    if (usb_midi_enabled) {
+        rx_blink_state[USB_LED_ID].force_write<led_rxusb>();
+        tx_blink_state[USB_LED_ID].force_write<led_txusb>();
+    } else {
+        led_rxusb::high();
+        led_txusb::high();
+    }
+}
+
 void startup_animation() {
     const unsigned long frame_delay = 150;
     unsigned long t = millis();
@@ -157,6 +209,14 @@ using namespace ui;
 
 ISR(TCD2_HUNF_vect)
 {
+    if (led_test) {
+        if (btn.down()) {
+            rst_blink_state.write<led_pwr>();
+        }
+
+        return;
+    }
+
     if (!btn.down()) {
         pulse_state.write<led_pwr>();
     } else {

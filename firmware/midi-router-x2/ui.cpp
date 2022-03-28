@@ -42,6 +42,12 @@
 #include <timer.h>
 #include <artl/timer.h>
 
+namespace {
+
+bool led_test = false;
+
+}
+
 namespace ui {
 
 void init(void)
@@ -84,6 +90,34 @@ bool btn_down() {
 
 void usb_midi_disable() {
     usb_midi_enabled = false;
+}
+
+void led_test_enable() {
+    if (led_test) return;
+
+    led_test = true;
+
+    led_pwr::high();
+
+    led_rx0::high();
+    led_rx1::high();
+
+    led_tx0::high();
+    led_tx1::high();
+}
+
+void led_test_disable() {
+    if (!led_test) return;
+
+    led_test = false;
+
+    pulse_state.write<led_pwr>();
+
+    rx_blink_state[0].force_write<led_rx0>();
+    rx_blink_state[1].force_write<led_rx1>();
+
+    tx_blink_state[0].force_write<led_tx0>();
+    tx_blink_state[1].force_write<led_tx1>();
 }
 
 void startup_animation() {
@@ -133,6 +167,10 @@ using namespace ui;
 
 ISR(TCD2_HUNF_vect)
 {
+    if (led_test) {
+        return;
+    }
+
     pulse_state.write<led_pwr>();
 
     rx_blink_state[0].write<led_rx0>();

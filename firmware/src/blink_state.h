@@ -58,6 +58,14 @@ struct blink_state_t {
         }
     }
 
+    template<typename T>
+    void force_write() {
+        bool v = state ? get() : false;
+
+        last_write = v;
+        T::write(v);
+    }
+
     uint16_t state = 0;
     uint16_t active_state = 0;
     bool last_write = false;

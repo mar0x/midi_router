@@ -107,6 +107,7 @@ int main(void)
     ui::startup_animation();
 
     unsigned long t = millis();
+    artl::timer<> active_test_timer;
 
     // The main loop manages only the power mode
     // because the USB management is done by interrupt
@@ -122,14 +123,31 @@ int main(void)
                 if (ui::btn_down()) {
                     rst_blink_start(t);
                 } else {
-                    if (rst_blink_count < 2) {
+                    switch(rst_blink_count) {
+                    case 0:
+                    case 1:
                         reset_do_soft_reset();
-                    }
+                        break;
 
-                    if (usb_midi_enabled) {
-                        udc_stop();
-                    } else {
-                        udc_start();
+                    case 2:
+                        ui::led_test_disable();
+                        active_test_timer.cancel();
+                        if (usb_midi_enabled) {
+                            udc_stop();
+                        } else {
+                            udc_start();
+                        }
+                        break;
+
+                    case 3:
+                        ui::led_test_enable();
+                        active_test_timer.cancel();
+                        break;
+
+                    case 4:
+                        ui::led_test_disable();
+                        active_test_timer.schedule(t + 300);
+                        break;
                     }
 
                     rst_blink_stop();
@@ -149,6 +167,22 @@ int main(void)
                 stat_timer.schedule(t + stat_period);
 
                 stat_print(true);
+            }
+
+            if (active_test_timer.update(t)) {
+                active_test_timer.schedule(t + 300);
+
+                uint8_t b = CMD_SYS_ACTIVE_S;
+
+                for(uint8_t i = 0; i < MIDI_PORTS; ++i) {
+                    midi::port_stat_t &stat = midi::port_stat[i];
+
+                    ++stat.snd_bytes;
+                    ++stat.snd_msgs;
+
+                    ui::tx_active(i);
+                    midi::send(i, &b, 1);
+                }
             }
         }
 

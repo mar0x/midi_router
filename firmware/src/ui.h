@@ -95,6 +95,9 @@ inline void usb_midi_enable() {
 
 void usb_midi_disable();
 
+void led_test_enable();
+void led_test_disable();
+
 void startup_animation();
 
 }
