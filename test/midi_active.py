@@ -2,14 +2,22 @@
 
 import rtmidi
 import time
+import sys
 
 midiout = rtmidi.RtMidiOut()
 c = midiout.getPortCount()
 if c == 0:
     exit(1)
 
+for i in range(c):
+    print("OUT %d: %s" % (i, midiout.getPortName(i)))
+
 a = rtmidi.MidiMessage(b'\xfe')
-i = 0
+
+if len(sys.argv) > 1:
+    i = int(sys.argv[1])
+else:
+    i = 0
 
 print("OUT %d: %s" % (i, midiout.getPortName(i)))
 

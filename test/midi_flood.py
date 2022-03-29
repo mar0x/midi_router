@@ -27,13 +27,14 @@ for i in range(pc):
     port.openPort(i)
     ports.append(port)
 
-for n in range(1000):
+for n in range(100):
     for m in msgs:
-        ports[0].sendMessage(m)
-        ports[1].sendMessage(m)
-        ports[2].sendMessage(m)
-        ports[3].sendMessage(m)
+        #ports[0].sendMessage(m)
+        #ports[1].sendMessage(m)
+        #ports[2].sendMessage(m)
+        #ports[3].sendMessage(m)
         #ports[4].sendMessage(m)
         #ports[5].sendMessage(m)
         #ports[6].sendMessage(m)
+        pass
 
