@@ -27,8 +27,8 @@
   (pad "" thru_hole oval (at 10 -10) (size 3.0 2.3) (drill oval 1.5 0.8) (layers *.Cu *.Mask))
   (pad "" thru_hole oval (at 12.5 -10) (size 3.0 2.3) (drill oval 1.5 0.8) (layers *.Cu *.Mask))
 
-  (model ${KIPRJMOD}/../lib/DIN5MIDI-OOTDTY.wrl
-    (offset (xyz 7.5 13 0))
+  (model ${KIPRJMOD}/../lib/DIN5-DS-5-01-MIDI.step
+    (offset (xyz 7.5 5.5 0))
     (scale (xyz 1 1 1))
     (rotate (xyz 0 0 180))
   )
