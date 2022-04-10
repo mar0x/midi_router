@@ -11,3 +11,4 @@ fp-info-cache
 *.hex
 miniconda3
 backup
+*-backups
