@@ -3,6 +3,7 @@
 import cadquery as cq
 import math
 
+flat = True
 #midi_sock_count = 7
 midi_sock_count = 4
 #midi_sock_count = 3  # Splitter x6
@@ -42,11 +43,12 @@ if midi_sock_count == 7:
     # or led_size = 2 for round hole
 
     usb_led_step = 20
+    usb_led_count = 3
 
     rst_hole_z = 4 # above board
     rst_hole_y = 0 # from center line
 
-if midi_sock_count == 4:
+if midi_sock_count == 4 and not flat:
     board_length = 96
     board_width = 50
     board_thickness = 1.2
@@ -84,6 +86,45 @@ if midi_sock_count == 4:
 
     rst_hole_z = 14 # above board
     rst_hole_y = 7 # from center line
+
+if midi_sock_count == 4 and flat:
+    board_length = 100
+    board_width = 80
+    board_thickness = 1.5
+    board_clearance = 0.6
+    board_corner_r = 10
+    fillet_r = 3
+
+    box_inner_height = 33
+    box_thickness = 2
+
+    base_stand_d = 8
+    screw_cup_hole_d = 5.5
+    base_edge_height = 2
+
+    base_stand_h = 3
+
+    cover_stand_d = base_stand_d
+    cover_stand_d1 = 10
+    cover_edge_height = 4
+    cover_clearance = 0.2
+
+    stand_x_step = 90
+    stand_y_step = 66
+    central_stand_x_step = 40
+
+    midi_sock_step = 20
+    midi_sock_d = 16
+    midi_sock_shift = 10 # above board
+    led_shift = midi_sock_shift + 13 # above board
+    led_size = 2 # round hole
+    # or led_size = (5.2, 2.7) for rect
+
+    usb_led_step = 20
+    usb_led_count = 3
+
+    rst_hole_z = 4 # above board
+    rst_hole_y = 0 # from center line
 
 
 if midi_sock_count == 3:
@@ -201,6 +242,9 @@ if 'usb_led_shift' not in locals():
 if 'usb_y_shift' not in locals():
     usb_y_shift = 0
 
+if 'usb_led_count' not in locals():
+    usb_led_count = 3
+
 rst_hole_d = 2
 
 usb_z_shift = box_thickness + base_stand_h + board_thickness + usb_height / 2
@@ -316,7 +360,7 @@ stands = stands.faces(">Z").workplane(centerOption="CenterOfBoundBox") \
         .pushPoints(stand_centers) \
         .hole(cover_stand_hole_d)
 
-if midi_sock_count == 4 or midi_sock_count == 3:
+if (midi_sock_count == 4 and not flat) or midi_sock_count == 3:
     stands = stands.cut(
         cq.Workplane("XY").rect(94, 30 + 1).extrude(led_shift) \
         .union(

@@ -66,5 +66,7 @@ endef
 
 $(eval $(call BOARD_MCU_template,midi-router-x2,atxmega128a1u))
 $(eval $(call BOARD_MCU_template,midi-router-x4,atxmega32a4u))
-#$(eval $(call BOARD_MCU_template,midi-router-x4,atxmega128a4u))
+$(eval $(call BOARD_MCU_template,midi-router-x4-flat,atxmega32a4u))
+$(eval $(call BOARD_MCU_template,midi-router-x4,atxmega128a4u))
+$(eval $(call BOARD_MCU_template,midi-router-x4-flat,atxmega128a4u))
 $(eval $(call BOARD_MCU_template,midi-router-x7,atxmega128a1u))

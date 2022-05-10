@@ -20,7 +20,15 @@
             </member>
             <member>
                 <project>bootloader_xmega</project>
+                <configuration>atxmega128a4u-x4-flat</configuration>
+            </member>
+            <member>
+                <project>bootloader_xmega</project>
                 <configuration>atxmega32a4u-x4</configuration>
+            </member>
+            <member>
+                <project>bootloader_xmega</project>
+                <configuration>atxmega32a4u-x4-flat</configuration>
             </member>
         </batchDefinition>
     </batchBuild>

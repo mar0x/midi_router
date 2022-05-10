@@ -57,6 +57,15 @@ int main(void)
 	PORTC.DIRSET = (1 << 3) | (1 << 4) | (1 << 5) | (1 << 7);
 	PORTD.DIRSET = (1 << 0) | (1 << 1) | (1 << 3);
 	PORTE.DIRSET = (1 << 3);
+#elif defined(MIDI_ROUTER_X4_FLAT)
+# define ISP_LED_ON (PORTA.OUTSET = (1 << 3))
+# define ISP_LED_OFF (PORTA.OUTCLR = (1 << 3))
+
+	PORTA.DIRSET = (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5) | (1 << 6) | (1 << 7);
+	PORTC.DIRSET = (1 << 3) | (1 << 5) | (1 << 7);
+	PORTD.DIRSET = (1 << 1) | (1 << 3) | (1 << 5);
+	PORTE.DIRSET = (1 << 0) | (1 << 1) | (1 << 3);
+	PORTB.DIRSET = (1 << 0) | (1 << 1) | (1 << 3);
 #elif defined(MIDI_ROUTER_X2)
 # define ISP_LED_ON (PORTD.OUTSET = (1 << 1))
 # define ISP_LED_OFF (PORTD.OUTCLR = (1 << 1))

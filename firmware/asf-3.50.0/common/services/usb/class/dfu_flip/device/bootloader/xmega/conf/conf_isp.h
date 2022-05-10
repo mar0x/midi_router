@@ -91,6 +91,11 @@
 # define ISP_PORT_PINCTRL  PORTC_PIN1CTRL
 # define ISP_PORT_IN       PORTC_IN
 # define ISP_PORT_PIN      1
+#elif defined(MIDI_ROUTER_X4_FLAT)
+# define ISP_PORT_DIR      PORTB_DIR
+# define ISP_PORT_PINCTRL  PORTB_PIN2CTRL
+# define ISP_PORT_IN       PORTB_IN
+# define ISP_PORT_PIN      2
 #else
 # define ISP_PORT_DIR      PORTC_DIR
 # define ISP_PORT_PINCTRL  PORTC_PIN3CTRL
