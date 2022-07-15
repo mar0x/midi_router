@@ -95,7 +95,7 @@ if midi_sock_count == 4 and flat:
     board_corner_r = 10
     fillet_r = 3
 
-    box_inner_height = 33
+    box_inner_height = 33 - 4
     box_thickness = 2
 
     base_stand_d = 8
@@ -116,7 +116,7 @@ if midi_sock_count == 4 and flat:
     midi_sock_step = 20
     midi_sock_d = 16
     midi_sock_shift = 10 # above board
-    led_shift = midi_sock_shift + 13 # above board
+    led_shift = midi_sock_shift + 13 - 2 # above board
     led_size = 2 # round hole
     # or led_size = (5.2, 2.7) for rect
 
@@ -388,7 +388,10 @@ stands = stands.union(e1).union(e2).intersect(i)
 cover = cover.union(stands).union(cover_rim)
 
 # move the cover up
-cover = cover.translate((0, 0, box_inner_height * 2))
+#cover = cover.translate((0, 0, box_inner_height * 2))
+
+cover = cover.rotate((0, 0, 0), (1, 0, 0), 180) \
+    .translate((0, box_outer_width + 5, box_thickness + 0.1))
 
 if __name__ == '__cqgi__':
     show_object(cover)
