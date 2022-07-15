@@ -26,8 +26,8 @@ template<> uint8_t uart_e0::want_write = 0;
 namespace midi {
 
 void init() {
-    PORTD.INT0MASK = 0;
-    PORTD.INTCTRL = 0;
+    PORTE.INT0MASK = 0;
+    PORTE.INTCTRL = 0;
 
     uart_c0::setup();
     uart_c1::setup();
@@ -51,8 +51,8 @@ void splitter() {
     uart_d0::port_traits::setup_pins();
     uart_e0::port_traits::setup_pins();
 
-    PORTD.INT0MASK = uart_d0::port_traits::rx::traits::bit_mask;
-    PORTD.INTCTRL = PORT_INT0LVL_HI_gc;
+    PORTE.INT0MASK = uart_e0::port_traits::rx::traits::bit_mask;
+    PORTE.INTCTRL = PORT_INT0LVL_HI_gc;
 }
 
 uint8_t send(uint8_t port, const uint8_t *buf, uint8_t size) {
@@ -101,11 +101,11 @@ ISR(USARTD0_DRE_vect)
     uart_d0::on_dre_int();
 }
 
-ISR(PORTD_INT0_vect)
+ISR(PORTE_INT0_vect)
 {
     crit_sec cs;
 
-    bool v = uart_d0::rx::read();
+    bool v = uart_e0::rx::read();
 
     if (v) {
         uart_d0::tx::high();
