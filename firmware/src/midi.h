@@ -5,15 +5,17 @@ extern "C" {
 }
 
 #include "ring.h"
+#include "artl/timer.h"
 
 namespace midi {
 
-extern volatile uint8_t rx_ready;
-
 struct port_stat_t {
     enum {
-        MAX_FIELD = 8,
+        MAX_FIELD = 12,
     };
+
+    static const char *title[MAX_FIELD];
+    static const uint8_t title_len[MAX_FIELD];
 
     uint32_t operator[](uint8_t i) const {
         return (&rcv_bytes)[i];
@@ -22,6 +24,10 @@ struct port_stat_t {
     void reset() {
         rcv_bytes = 0;
         rcv_msgs = 0;
+        rcv_ovf = 0;
+        rcv_err = 0;
+        rcv_cmd = 0;
+        rcv_to = 0;
         snd_bytes = 0;
         snd_msgs = 0;
         snd_ovf = 0;
@@ -32,6 +38,10 @@ struct port_stat_t {
 
     uint32_t rcv_bytes = 0;
     uint32_t rcv_msgs = 0;
+    uint32_t rcv_ovf = 0;
+    uint32_t rcv_err = 0;
+    uint32_t rcv_cmd = 0;
+    uint32_t rcv_to = 0;
     uint32_t snd_bytes = 0;
     uint32_t snd_msgs = 0;
     uint32_t snd_ovf = 0;
@@ -42,6 +52,9 @@ struct port_stat_t {
     uint32_t stall_start = 0;
 };
 
+using process_byte_t = void (*)(uint8_t port, uint8_t data, bool ferr);
+using process_dre_t = void (*)(uint8_t port);
+
 extern port_stat_t port_stat[MIDI_PORTS + 1];
 extern bool port_stat_update;
 
@@ -49,17 +62,25 @@ extern bool port_mon;
 extern bool port_in_mon[MIDI_PORTS];
 extern bool port_out_mon[MIDI_PORTS];
 
-void init();
-void splitter();
+extern artl::timer<> pending_timer;
+
+extern process_byte_t on_rx_complete;
+extern process_dre_t on_dre;
+
+void init(process_byte_t cb = NULL);
 
 uint8_t send(uint8_t port, const uint8_t *buf, uint8_t size);
+void pending_timeout();
+
+void dump_state();
 
 void start_mon();
 void stop_mon();
 
+void dummy_process_dre(uint8_t port);
+
 }
 
-extern void midi_process_byte(uint8_t port, uint8_t data);
 extern void midi_send_ready(uint8_t port, uint8_t size);
 
 template<uint8_t ID>
@@ -69,7 +90,7 @@ struct rx_midi_traits {
     };
 
     static inline void on_rx(uint8_t d) {
-        midi_process_byte(id, d);
+        midi_process_byte(id, d, false);
     }
 };
 

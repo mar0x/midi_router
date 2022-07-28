@@ -3,7 +3,7 @@
 
 #include <string.h>
 
-#define FW_VERSION "2022.07.15"
+#define FW_VERSION "2022.08.10Ex"
 
 struct version_t {
     enum {

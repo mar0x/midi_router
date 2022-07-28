@@ -2,6 +2,7 @@
 #include <midi.h>
 #include <uart.h>
 #include <crit_sec.h>
+#include <splitter.h>
 
 namespace {
 
@@ -33,167 +34,179 @@ using uart_f1 = uart_t<port::F1, 31250, rx_midi_traits<6>, tx_midi_traits<6> >;
 template<> uart_f1::tx_ring_t uart_f1::tx_ring = {};
 template<> uint8_t uart_f1::want_write = 0;
 
+using UL = uart_list<uart_c0, uart_c1, uart_d0, uart_e0, uart_e1, uart_f0, uart_f1>;
+
+midi::splitter_t<UL> splitter_state;
+
+void splitter_rx_complete(uint8_t port, uint8_t data, bool ferr) {
+    splitter_state.rx_complete(port, data, ferr);
+}
+
+void splitter_process_dre(uint8_t port) {
+    splitter_state.process_dre(port);
+}
+
+template<typename T>
+inline void rx_complete() {
+    crit_sec cs;
+    bool ferr = T::ferr();
+    midi::on_rx_complete(T::rx_traits::id, T::data(), ferr);
+}
+
+template<typename T>
+inline void process_bit() {
+    crit_sec cs;
+    splitter_state.process_bit(T::rx_traits::id, T::rx::read());
+}
+
+template<typename T>
+inline void process_dre() {
+    crit_sec cs;
+    T::on_dre_int();
+
+    midi::on_dre(T::rx_traits::id);
+}
+
 }
 
 namespace midi {
 
-void init() {
-    PORTC.INT0MASK = 0;
-    PORTC.INTCTRL = 0;
+void init(process_byte_t cb) {
+    if (cb) {
+        splitter_state.disable();
 
-    uart_c0::setup();
-    uart_c1::setup();
-    uart_d0::setup();
-    uart_e0::setup();
-    uart_e1::setup();
-    uart_f0::setup();
-    uart_f1::setup();
+        on_rx_complete = cb;
+        on_dre = dummy_process_dre;
+    } else {
+        splitter_state.enable();
 
-    uart_c0::rxc_int_hi();
-    uart_c1::rxc_int_hi();
-    uart_d0::rxc_int_hi();
-    uart_e0::rxc_int_hi();
-    uart_e1::rxc_int_hi();
-    uart_f0::rxc_int_hi();
-    uart_f1::rxc_int_hi();
-}
-
-void splitter() {
-    uart_c0::disable();
-    uart_c1::disable();
-    uart_d0::disable();
-    uart_e0::disable();
-    uart_e1::disable();
-    uart_f0::disable();
-    uart_f1::disable();
-
-    uart_c0::port_traits::setup_pins();
-    uart_c1::port_traits::setup_pins();
-    uart_d0::port_traits::setup_pins();
-    uart_e0::port_traits::setup_pins();
-    uart_e1::port_traits::setup_pins();
-    uart_f0::port_traits::setup_pins();
-    uart_f1::port_traits::setup_pins();
-
-    PORTC.INT0MASK = (1 << 2);
-    PORTC.INTCTRL = PORT_INT0LVL_HI_gc;
+        on_rx_complete = splitter_rx_complete;
+        on_dre = splitter_process_dre;
+    }
 }
 
 uint8_t send(uint8_t port, const uint8_t *buf, uint8_t size) {
-    switch (port) {
-    case 0: return uart_c0::write_buf(buf, size);
-    case 1: return uart_c1::write_buf(buf, size);
-    case 2: return uart_d0::write_buf(buf, size);
-    case 3: return uart_e0::write_buf(buf, size);
-    case 4: return uart_e1::write_buf(buf, size);
-    case 5: return uart_f0::write_buf(buf, size);
-    case 6: return uart_f1::write_buf(buf, size);
-    }
+    return UL::write_buf(port, buf, size);
+}
 
-    return 0;
+void pending_timeout() {
+    splitter_state.pending_timeout();
+}
+
+void dump_state() {
+    splitter_state.dump();
 }
 
 }
+
 
 ISR(USARTC0_RXC_vect)
 {
-    uart_c0::on_rxc_int();
+    rx_complete<uart_c0>();
 }
 
 ISR(USARTC0_DRE_vect)
 {
-    uart_c0::on_dre_int();
+    process_dre<uart_c0>();
+}
+
+ISR(PORTC_INT0_vect)
+{
+    process_bit<uart_c0>();
 }
 
 
 ISR(USARTC1_RXC_vect)
 {
-    uart_c1::on_rxc_int();
+    rx_complete<uart_c1>();
 }
 
 ISR(USARTC1_DRE_vect)
 {
-    uart_c1::on_dre_int();
+    process_dre<uart_c1>();
+}
+
+ISR(PORTC_INT1_vect)
+{
+    process_bit<uart_c1>();
 }
 
 
 ISR(USARTD0_RXC_vect)
 {
-    uart_d0::on_rxc_int();
+    rx_complete<uart_d0>();
 }
 
 ISR(USARTD0_DRE_vect)
 {
-    uart_d0::on_dre_int();
+    process_dre<uart_d0>();
 }
 
-ISR(PORTC_INT0_vect)
+ISR(PORTD_INT0_vect)
 {
-    crit_sec cs;
-
-    bool v = uart_c0::rx::read();
-
-    if (v) {
-        uart_c0::tx::high();
-        uart_c1::tx::high();
-        uart_d0::tx::high();
-        uart_e0::tx::high();
-        uart_e1::tx::high();
-        uart_f0::tx::high();
-        uart_f1::tx::high();
-    } else {
-        uart_c0::tx::low();
-        uart_c1::tx::low();
-        uart_d0::tx::low();
-        uart_e0::tx::low();
-        uart_e1::tx::low();
-        uart_f0::tx::low();
-        uart_f1::tx::low();
-
-        midi::rx_ready = 1;
-    }
+    process_bit<uart_d0>();
 }
 
 
 ISR(USARTE0_RXC_vect)
 {
-    uart_e0::on_rxc_int();
+    rx_complete<uart_e0>();
 }
 
 ISR(USARTE0_DRE_vect)
 {
-    uart_e0::on_dre_int();
+    process_dre<uart_e0>();
+}
+
+ISR(PORTE_INT0_vect)
+{
+    process_bit<uart_e0>();
 }
 
 
 ISR(USARTE1_RXC_vect)
 {
-    uart_e1::on_rxc_int();
+    rx_complete<uart_e1>();
 }
 
 ISR(USARTE1_DRE_vect)
 {
-    uart_e1::on_dre_int();
+    process_dre<uart_e1>();
+}
+
+ISR(PORTE_INT1_vect)
+{
+    process_bit<uart_e1>();
 }
 
 
 ISR(USARTF0_RXC_vect)
 {
-    uart_f0::on_rxc_int();
+    rx_complete<uart_f0>();
 }
 
 ISR(USARTF0_DRE_vect)
 {
-    uart_f0::on_dre_int();
+    process_dre<uart_f0>();
+}
+
+ISR(PORTF_INT0_vect)
+{
+    process_bit<uart_f0>();
 }
 
 
 ISR(USARTF1_RXC_vect)
 {
-    uart_f1::on_rxc_int();
+    rx_complete<uart_f1>();
 }
 
 ISR(USARTF1_DRE_vect)
 {
-    uart_f1::on_dre_int();
+    process_dre<uart_f1>();
+}
+
+ISR(PORTF_INT1_vect)
+{
+    process_bit<uart_f1>();
 }

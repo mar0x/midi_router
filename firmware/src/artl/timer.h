@@ -11,16 +11,17 @@ template<typename CALLBACK = default_timer_handler>
 struct timer : public CALLBACK {
 
     using CALLBACK::CALLBACK;
+    using time_type = unsigned long;
 
-    constexpr unsigned long max_delay() const {
+    constexpr time_type max_delay() const {
         return ((unsigned long) -1) / 2;
     }
 
-    void schedule(unsigned long t) { at_ = t; }
+    void schedule(time_type t) { at_ = t; }
 
     void cancel() { at_ = 0; }
 
-    bool update(unsigned long t) {
+    bool update(time_type t) {
         if (at_ != 0 && t - at_ < max_delay()) {
             at_ = 0;
             (*this)(t);
@@ -33,8 +34,10 @@ struct timer : public CALLBACK {
 
     bool active() const { return at_ != 0; }
 
+    time_type at() const { return at_; }
+
 private:
-    unsigned long at_ = 0;
+    time_type at_ = 0;
 };
 
 }

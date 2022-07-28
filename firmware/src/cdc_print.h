@@ -1,9 +1,9 @@
 
 #pragma once
 
-namespace {
+extern bool cdc_dtr;
 
-bool cdc_dtr = false;
+namespace {
 
 void _cdc_print_eol() __attribute__((unused));
 void cdc_print_eol() __attribute__((unused));

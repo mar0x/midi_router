@@ -80,9 +80,41 @@ inline void tx_usb_blink() { tx_blink_state[USB_LED_ID].start(); }
 inline void rx_usb_active() { rx_blink_state[USB_LED_ID].active(); }
 inline void tx_usb_active() { tx_blink_state[USB_LED_ID].active(); }
 
+inline void rx_error(uint8_t port) { rx_blink_state[port].error(); }
+
 inline void tx_blink() {
     for (uint8_t i = 0; i < MIDI_PORTS; ++i) {
         tx_blink_state[i].start();
+    }
+}
+
+inline void tx_active() {
+    for (uint8_t i = 0; i < MIDI_PORTS; ++i) {
+        tx_blink_state[i].active();
+    }
+}
+
+inline void rx_data(bool active, uint8_t port) {
+    if (active) {
+        rx_active(port);
+    } else {
+        rx_blink(port);
+    }
+}
+
+inline void tx_data(bool active, uint8_t port) {
+    if (active) {
+        tx_active(port);
+    } else {
+        tx_blink(port);
+    }
+}
+
+inline void tx_data(bool active) {
+    if (active) {
+        tx_active();
+    } else {
+        tx_blink();
     }
 }
 

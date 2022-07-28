@@ -9,6 +9,9 @@ struct blink_state_t {
         ACTIVE = 0x1000,
         MIN_ACTIVE = ACTIVE - 0x100,
         STEP = 0x40,
+
+        START_ERROR = 0x8000,
+        MIN_ERROR = STEP,
     };
 
     static bool get(uint16_t state) {
@@ -22,16 +25,28 @@ struct blink_state_t {
         return ((state & 0xFF) <= p);
     }
 
-    bool get() const { return get(state); }
+    bool get() const {
+        return error_state ? (state > (START_ERROR / 2)) : get(state);
+    }
 
     inline __attribute__((always_inline))
-    void start() { if (state <= MIN) { state = START; } }
+    void start() { if (state <= MIN && !error_state) { state = START; } }
 
     void stop() { state = 0; }
     void active() {
-        active_state = 0x80 * STEP;
+        if (!error_state) {
+            active_state = 0x80;
 
-        if (state < MIN_ACTIVE) { state = ACTIVE; }
+            if (state < MIN_ACTIVE) { state = ACTIVE; }
+        }
+    }
+
+    void error() {
+        if (!error_state) {
+            state = START_ERROR,
+            active_state = 0;
+        }
+        error_state = 5;
     }
 
     operator bool() const { return state != 0; }
@@ -41,7 +56,15 @@ struct blink_state_t {
 
         if (active_state && state < MIN_ACTIVE) {
             state += 0x100;
-            active_state -= STEP;
+            active_state -= 1;
+        }
+
+        if (error_state) {
+            if (state) { state -= STEP; }
+            if (state < MIN_ERROR) {
+                state = START_ERROR;
+                error_state -= 1;
+            }
         }
     }
 
@@ -67,6 +90,7 @@ struct blink_state_t {
     }
 
     uint16_t state = 0;
-    uint16_t active_state = 0;
+    uint8_t active_state = 0;
+    uint8_t error_state = 0;
     bool last_write = false;
 };
