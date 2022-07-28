@@ -95,7 +95,7 @@ if midi_sock_count == 4 and flat:
     board_corner_r = 10
     fillet_r = 3
 
-    box_inner_height = 33 - 4
+    box_inner_height = 33 - 5
     box_thickness = 2
 
     base_stand_d = 8
@@ -383,7 +383,14 @@ e2 = cq.Workplane("XY") \
         .circle(edge_rad + 4).circle(edge_rad + 3) \
         .extrude(-cover_edge_height)
 
-stands = stands.union(e1).union(e2).intersect(i)
+x = cq.Workplane("YZ") \
+        .center(usb_led_step, -cover_edge_height / 2 - 3) \
+        .circle(cover_edge_height).extrude(box_inner_length) \
+        .translate((-box_inner_length / 2, 0, 0))
+
+stands = stands.union(e1).union(e2).intersect(i) \
+    .cut(x) \
+    .cut(x.translate((0, -usb_led_step * 2, 0)))
 
 cover = cover.union(stands).union(cover_rim)
 
@@ -396,6 +403,7 @@ cover = cover.rotate((0, 0, 0), (1, 0, 0), 180) \
 if __name__ == '__cqgi__':
     show_object(cover)
     show_object(base)
+#    show_object(x)
 #    show_object(logo)
 else:
     from cadquery import exporters
