@@ -86,6 +86,7 @@ ISR(PORTC_INT0_vect)
         uart_c0::tx::low();
         uart_c1::tx::low();
 
-        midi::rx_ready = 1;
+        midi::rx_ready |= (1 << 0);
+        midi::tx_sent |= (1 << 0) | (1 << 1);
     }
 }

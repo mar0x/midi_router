@@ -9,6 +9,7 @@ extern "C" {
 namespace midi {
 
 extern volatile uint8_t rx_ready;
+extern volatile uint8_t tx_sent;
 
 struct port_stat_t {
     enum {

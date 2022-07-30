@@ -3,7 +3,8 @@
 
 namespace midi {
 
-volatile uint8_t rx_ready;
+volatile uint8_t rx_ready = 0;
+volatile uint8_t tx_sent = 0;
 
 port_stat_t port_stat[MIDI_PORTS + 1];
 bool port_stat_update = false;

@@ -157,10 +157,15 @@ int main(void)
             }
 
             if (!usb_midi_enabled && midi::rx_ready) {
+                uint8_t r = midi::rx_ready;
                 midi::rx_ready = 0;
 
-                ui::rx_blink(0);
-                ui::tx_blink();
+                ui::rx_blink_mask(r);
+
+                uint8_t t = midi::tx_sent;
+                midi::tx_sent = 0;
+
+                ui::tx_blink_mask(t);
             }
 
             if (stat_timer.update(t)) {

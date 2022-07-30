@@ -39,6 +39,7 @@ namespace midi {
 
 void init() {
     PORTC.INT0MASK = 0;
+    PORTC.INT1MASK = 0;
     PORTC.INTCTRL = 0;
 
     uart_c0::setup();
@@ -76,7 +77,8 @@ void splitter() {
     uart_f1::port_traits::setup_pins();
 
     PORTC.INT0MASK = (1 << 2);
-    PORTC.INTCTRL = PORT_INT0LVL_HI_gc;
+    PORTC.INT1MASK = (1 << 6);
+    PORTC.INTCTRL = PORT_INT0LVL_HI_gc | PORT_INT1LVL_HI_gc;
 }
 
 uint8_t send(uint8_t port, const uint8_t *buf, uint8_t size) {
@@ -105,6 +107,26 @@ ISR(USARTC0_DRE_vect)
     uart_c0::on_dre_int();
 }
 
+ISR(PORTC_INT0_vect)
+{
+    crit_sec cs;
+
+    bool v = uart_c0::rx::read();
+
+    if (v) {
+        uart_c0::tx::high();
+        uart_c1::tx::high();
+        uart_d0::tx::high();
+    } else {
+        uart_c0::tx::low();
+        uart_c1::tx::low();
+        uart_d0::tx::low();
+
+        midi::rx_ready |= (1 << 0);
+        midi::tx_sent |= (1 << 0) | (1 << 1) | (1 << 2);
+    }
+}
+
 
 ISR(USARTC1_RXC_vect)
 {
@@ -116,6 +138,28 @@ ISR(USARTC1_DRE_vect)
     uart_c1::on_dre_int();
 }
 
+ISR(PORTC_INT1_vect)
+{
+    crit_sec cs;
+
+    bool v = uart_c1::rx::read();
+
+    if (v) {
+        uart_e0::tx::high();
+        uart_e1::tx::high();
+        uart_f0::tx::high();
+        uart_f1::tx::high();
+    } else {
+        uart_e0::tx::low();
+        uart_e1::tx::low();
+        uart_f0::tx::low();
+        uart_f1::tx::low();
+
+        midi::rx_ready |= (1 << 1);
+        midi::tx_sent |= (1 << 3) | (1 << 4) | (1 << 5) | (1 << 6);
+    }
+}
+
 
 ISR(USARTD0_RXC_vect)
 {
@@ -125,33 +169,6 @@ ISR(USARTD0_RXC_vect)
 ISR(USARTD0_DRE_vect)
 {
     uart_d0::on_dre_int();
-}
-
-ISR(PORTC_INT0_vect)
-{
-    crit_sec cs;
-
-    bool v = uart_c0::rx::read();
-
-    if (v) {
-        uart_c0::tx::high();
-        uart_c1::tx::high();
-        uart_d0::tx::high();
-        uart_e0::tx::high();
-        uart_e1::tx::high();
-        uart_f0::tx::high();
-        uart_f1::tx::high();
-    } else {
-        uart_c0::tx::low();
-        uart_c1::tx::low();
-        uart_d0::tx::low();
-        uart_e0::tx::low();
-        uart_e1::tx::low();
-        uart_f0::tx::low();
-        uart_f1::tx::low();
-
-        midi::rx_ready = 1;
-    }
 }
 
 
