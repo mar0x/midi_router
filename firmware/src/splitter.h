@@ -13,6 +13,48 @@ extern "C" {
 
 namespace midi {
 
+struct splitter_state_t {
+    void port_queue_clear() {
+        port_queue_mask = 0;
+        port_queue.clear();
+    }
+
+    void port_queue_add(uint8_t port) {
+        if ((port_queue_mask & (1 << port)) == 0) {
+            port_queue_mask |= (1 << port);
+
+            port_queue.push_back(port);
+        }
+    }
+
+    uint8_t port_queue_pop() {
+        uint8_t port = port_queue.pop_front();
+        if (port_byte_queue[port].empty()) {
+            port_queue_mask &= ~(1 << port);
+        } else {
+            port_queue.push_back(port);
+        }
+        return port;
+    }
+
+    void dump() {
+        cdc_println("drew: ", dre_wait_mask);
+        cdc_println("bp:  ", pending_bytes);
+        cdc_println("pq(m/s/f): ", port_queue_mask, " ", port_queue.size(), " ", port_queue.front());
+    }
+
+    uint8_t dre_wait_mask = 0;
+
+    ring<MIDI_PORTS + 2, uint8_t> port_queue;
+    uint8_t port_queue_mask = 0;
+
+    uint8_t pending_bytes = 0;
+    unsigned long last_byte_time = 0;
+
+    ring<32, uint8_t> port_byte_queue[MIDI_PORTS + 1];
+    ring<8, uint8_t> rt_queue;
+};
+
 template<typename UL>
 struct splitter_t {
     enum {
@@ -20,39 +62,39 @@ struct splitter_t {
         PENDING_TIMEOUT_MS = 2,
     };
 
-    void setup() {
+    static void setup() {
         UL::setup();
         UL::rxc_int_hi();
     }
 
-    inline void enable() {
+    static inline void enable() {
         setup();
 
-        dre_wait_mask = 0;
+        state.dre_wait_mask = 0;
 
-        port_queue_clear();
-        pending_bytes = 0;
+        state.port_queue_clear();
+        state.pending_bytes = 0;
 
-        last_byte_time = 0;
+        state.last_byte_time = 0;
         pending_timer.cancel();
 
         for (uint8_t i = 0; i < MIDI_PORTS + 1; ++i) {
-            port_byte_queue[i].clear();
+            state.port_byte_queue[i].clear();
         }
-        rt_queue.clear();
+        state.rt_queue.clear();
 
         port_stat_update = true;
     }
 
-    inline void disable() {
-        dre_wait_mask = 0;
+    static inline void disable() {
+        state.dre_wait_mask = 0;
 
         setup();
 
         port_stat_update = true;
     }
 
-    void process_bit(uint8_t port, bool b) {
+    static void process_bit(uint8_t port, bool b) {
         if (b) {
             UL::tx_high();
         } else {
@@ -60,7 +102,7 @@ struct splitter_t {
         }
     }
 
-    void rx_complete(uint8_t port, uint8_t data, bool ferr) {
+    static void rx_complete(uint8_t port, uint8_t data, bool ferr) {
         port_stat_t &pstat = port_stat[port];
 
         ++pstat.rcv_bytes;
@@ -80,22 +122,22 @@ struct splitter_t {
         }
 
         if (is_midi_rt(data)) {
-            if (rt_queue.full()) {
-                rt_queue.pop_front();
+            if (state.rt_queue.full()) {
+                state.rt_queue.pop_front();
                 ui::rx_error(port);
                 ++pstat.rcv_ovf;
             }
 
-            rt_queue.push_back(data);
+            state.rt_queue.push_back(data);
 
-            if (dre_wait_mask == 0) {
+            if (state.dre_wait_mask == 0) {
                 process_queue();
             }
 
             return;
         }
 
-        auto &q = port_byte_queue[port];
+        auto &q = state.port_byte_queue[port];
 
         if (q.full()) {
             ui::rx_error(port);
@@ -104,41 +146,41 @@ struct splitter_t {
             return;
         }
 
-        if (q.empty() && !is_cmd && (port_queue_mask == 0 || port_queue.front() != port)) {
+        if (q.empty() && !is_cmd && (state.port_queue_mask == 0 || state.port_queue.front() != port)) {
             ui::rx_error(port);
             ++pstat.rcv_cmd;
 
             return;
         }
 
-        port_queue_add(port);
+        state.port_queue_add(port);
         q.push_back(data);
 
-        if (dre_wait_mask == 0 && port_queue.front() == port) {
+        if (state.dre_wait_mask == 0 && state.port_queue.front() == port) {
             process_queue();
 
             return;
         }
 
-        if (last_byte_time != 0 && !pending_timer.active()) {
-            pending_timer.schedule(last_byte_time + PENDING_TIMEOUT_MS);
+        if (state.last_byte_time != 0 && !pending_timer.active()) {
+            pending_timer.schedule(state.last_byte_time + PENDING_TIMEOUT_MS);
         }
     }
 
-    void process_dre(uint8_t port) {
-        dre_wait_mask &= ~(1 << port);
+    static void process_dre(uint8_t port) {
+        state.dre_wait_mask &= ~(1 << port);
 
-        if (dre_wait_mask == 0) {
+        if (state.dre_wait_mask == 0) {
             process_queue();
         }
     }
 
-    void pending_timeout() {
-        if (dre_wait_mask != 0) {
+    static void pending_timeout() {
+        if (state.dre_wait_mask != 0) {
             return;
         }
 
-        uint8_t port = port_queue_pop();
+        uint8_t port = state.port_queue_pop();
 
         ui::rx_error(port);
         ++port_stat[port].rcv_to;
@@ -146,18 +188,16 @@ struct splitter_t {
         process_queue();
     }
 
-    void dump() {
-        cdc_println("drew: ", dre_wait_mask);
-        cdc_println("bp:  ", pending_bytes);
-        cdc_println("pq(m/s/f): ", port_queue_mask, " ", port_queue.size(), " ", port_queue.front());
+    static void dump() {
+        state.dump();
     }
 
 private:
-    void send(uint8_t data) {
+    static void send(uint8_t data) {
         UL::write_byte(data);
 
         if (!UL::tx_ring_empty()) {
-            dre_wait_mask = ALL_PORTS_MASK;
+            state.dre_wait_mask = ALL_PORTS_MASK;
         }
 
         if (is_midi_cmd(data)) {
@@ -169,41 +209,18 @@ private:
         }
     }
 
-    inline void port_queue_add(uint8_t port) {
-        if ((port_queue_mask & (1 << port)) == 0) {
-            port_queue_mask |= (1 << port);
-
-            port_queue.push_back(port);
-        }
-    }
-
-    inline uint8_t port_queue_pop() {
-        uint8_t port = port_queue.pop_front();
-        if (port_byte_queue[port].empty()) {
-            port_queue_mask &= ~(1 << port);
-        } else {
-            port_queue.push_back(port);
-        }
-        return port;
-    }
-
-    void port_queue_clear() {
-        port_queue_mask = 0;
-        port_queue.clear();
-    }
-
-    void process_queue() {
+    static void process_queue() {
         uint8_t data;
 
-        if (!rt_queue.empty()) {
-            data = rt_queue.pop_front();
+        if (!state.rt_queue.empty()) {
+            data = state.rt_queue.pop_front();
         } else {
-            if (port_queue.empty()) {
+            if (state.port_queue.empty()) {
                 return false;
             }
 
-            uint8_t port = port_queue.front();
-            auto &q = port_byte_queue[port];
+            uint8_t port = state.port_queue.front();
+            auto &q = state.port_byte_queue[port];
 
             if (q.empty()) {
                 return false;
@@ -212,51 +229,42 @@ private:
             data = q.pop_front();
 
             if (update_pending_bytes(data) == 0) {
-                port_queue_pop();
+                state.port_queue_pop();
             }
         }
 
         send(data);
     }
 
-    inline uint8_t update_pending_bytes(uint8_t data) {
+    static inline uint8_t update_pending_bytes(uint8_t data) {
         uint8_t s = midi_cmd_t::cmd_size(data);
         if (s == 0) {
-            if (pending_bytes != 0 && pending_bytes != 0xFF) {
-                --pending_bytes;
+            if (state.pending_bytes != 0 && state.pending_bytes != 0xFF) {
+                --state.pending_bytes;
             }
         } else {
             if (data != CMD_SYS_EX) {
-                pending_bytes = s - 1;
+                state.pending_bytes = s - 1;
             } else {
-                pending_bytes = 0xFF;
+                state.pending_bytes = 0xFF;
             }
         }
 
-        if (pending_bytes != 0) {
-            last_byte_time = millis_();
+        if (state.pending_bytes != 0) {
+            state.last_byte_time = millis_();
 
-            if (port_queue.size() > 1) {
-                pending_timer.schedule(last_byte_time + PENDING_TIMEOUT_MS);
+            if (state.port_queue.size() > 1) {
+                pending_timer.schedule(state.last_byte_time + PENDING_TIMEOUT_MS);
             }
         } else {
-            last_byte_time = 0;
+            state.last_byte_time = 0;
             pending_timer.cancel();
         }
 
-        return pending_bytes;
+        return state.pending_bytes;
     }
 
-    uint8_t dre_wait_mask = 0;
-
-    ring<MIDI_PORTS + 2, uint8_t> port_queue;
-    uint8_t port_queue_mask = 0;
-
-    uint8_t pending_bytes = 0;
-    unsigned long last_byte_time = 0;
-
-    ring<16, uint8_t> port_byte_queue[MIDI_PORTS + 1];
-    ring<8, uint8_t> rt_queue;
+    static splitter_state_t state;
 };
 
 }

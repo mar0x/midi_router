@@ -25,6 +25,7 @@ template<> uint8_t uart_e0::want_write = 0;
 using UL = uart_list<uart_c0, uart_c1, uart_d0, uart_e0>;
 
 midi::splitter_t<UL> splitter_state;
+template<> midi::splitter_state_t midi::splitter_t<UL>::state = { };
 
 void splitter_rx_complete(uint8_t port, uint8_t data, bool ferr) {
     splitter_state.rx_complete(port, data, ferr);
