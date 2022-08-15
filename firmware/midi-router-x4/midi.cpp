@@ -53,7 +53,7 @@ inline void process_dre() {
     crit_sec cs;
     T::on_dre_int();
 
-    midi::on_dre(T::rx_traits::id);
+    midi::on_dre(T::tx_traits::id);
 }
 
 }
