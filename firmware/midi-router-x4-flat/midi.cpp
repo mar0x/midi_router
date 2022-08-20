@@ -79,10 +79,12 @@ uint8_t send(uint8_t port, const uint8_t *buf, uint8_t size) {
 }
 
 void pending_timeout() {
+    crit_sec cs;
     splitter_state.pending_timeout();
 }
 
 void dump_state() {
+    crit_sec cs;
     splitter_state.dump();
 }
 
