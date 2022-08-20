@@ -22,18 +22,9 @@ struct port_stat_t {
     }
 
     void reset() {
-        rcv_bytes = 0;
-        rcv_msgs = 0;
-        rcv_ovf = 0;
-        rcv_err = 0;
-        rcv_cmd = 0;
-        rcv_to = 0;
-        snd_bytes = 0;
-        snd_msgs = 0;
-        snd_ovf = 0;
-        stall_ms = 0;
-        stall_bytes = 0;
-        stall_msgs = 0;
+        for (uint8_t i = 0; i < MAX_FIELD; ++i) {
+            (&rcv_bytes)[i] = 0;
+        }
     }
 
     uint32_t rcv_bytes = 0;
