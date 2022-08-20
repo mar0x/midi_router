@@ -10,6 +10,10 @@ struct serial_cmd_t {
         CMD_UNKNOWN,
         CMD_VERSION,            // V
         CMD_MIDI_MON,           // M
+        CMD_MODE_SPLITTER,      // MS
+        CMD_MODE_ROUTER,        // MR
+        CMD_MODE_LED_TEST,      // ML
+        CMD_MODE_ACTIVE_TEST,   // MT
         CMD_UPTIME,             // U
         CMD_PORT_STAT,          // P
         CMD_PORT_STAT_RESET,    // R
@@ -270,6 +274,12 @@ serial_cmd_t::parse() {
             if (b[0] == 'U') { command_ = CMD_UPTIME; }
             if (b[0] == 'V') { command_ = CMD_VERSION; }
             break;
+        case 2:
+            if (b[0] == 'M' && b[1] == 'S') { command_ = CMD_MODE_SPLITTER; }
+            if (b[0] == 'M' && b[1] == 'R') { command_ = CMD_MODE_ROUTER; }
+            if (b[0] == 'M' && b[1] == 'L') { command_ = CMD_MODE_LED_TEST; }
+            if (b[0] == 'M' && b[1] == 'T') { command_ = CMD_MODE_ACTIVE_TEST; }
+            break;
         }
     }
 }
@@ -283,4 +293,9 @@ M - MIDI monitor
 U - show uptime
 P [s] [R] - port stats, every s sec, R - auto reset
 R - reset port stats
+
+MS - mode splitter
+MR - mode router
+ML - mode led test
+MT - mode active test
 )HELP";
