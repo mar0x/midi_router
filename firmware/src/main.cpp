@@ -65,6 +65,7 @@ uint8_t usb_send_active = 0;
 bool usb_send_busy = false;
 
 artl::timer<> stat_timer;
+artl::timer<> active_test_timer;
 uint32_t stat_period = 0;
 bool stat_auto_reset = 0;
 midi_cmd_t current_cmd[MIDI_PORTS];
@@ -111,7 +112,6 @@ int main(void)
     ui::startup_animation();
 
     unsigned long t = millis();
-    artl::timer<> active_test_timer;
 
     // The main loop manages only the power mode
     // because the USB management is done by interrupt
@@ -339,27 +339,49 @@ void process_serial_cmd(uint8_t port) {
     case serial_cmd_t::CMD_PORT_STAT: {
         uint32_t d;
         char r[1];
+        uint8_t rarg = 1;
 
         if (serial_cmd.get_arg(1, d) && d != 0) {
             stat_period = d * 1000;
+            rarg = 2;
 
             stat_timer.schedule(millis() + stat_period);
-
-            stat_auto_reset = serial_cmd.get_arg(2, r) && r[0] == 'R';
         } else {
             stat_period = 0;
-
-            stat_auto_reset = serial_cmd.get_arg(1, r) && r[0] == 'R';
+            rarg = 1;
         }
+
+        stat_auto_reset = serial_cmd.get_arg(rarg, r) && r[0] == 'R';
 
         stat_print(false);
         break;
     }
 
-    case serial_cmd_t::CMD_PORT_STAT_RESET: {
+    case serial_cmd_t::CMD_PORT_STAT_RESET:
         stat_reset();
         break;
-    }
+
+    case serial_cmd_t::CMD_MODE_SPLITTER:
+        ui::led_test_disable();
+        active_test_timer.cancel();
+        usb_midi_enable(false);
+        break;
+
+    case serial_cmd_t::CMD_MODE_ROUTER:
+        ui::led_test_disable();
+        active_test_timer.cancel();
+        usb_midi_enable(true);
+        break;
+
+    case serial_cmd_t::CMD_MODE_LED_TEST:
+        ui::led_test_enable();
+        active_test_timer.cancel();
+        break;
+
+    case serial_cmd_t::CMD_MODE_ACTIVE_TEST:
+        ui::led_test_disable();
+        active_test_timer.schedule(millis() + 300);
+        break;
 
     default:
         cdc_println("ERR");
@@ -436,13 +458,32 @@ UDC_DESC_STORAGE udi_api_t udi_api_audio_ctrl = {
 
 namespace {
 
+enum {
+    MAX_FIELD = midi::port_stat_t::MAX_FIELD,
+};
+
+uint8_t stat_field_width[MAX_FIELD];
+uint16_t stat_line_width = 0;
+uint16_t stat_port_start = 0;
+
+void stat_update_field_width() {
+    stat_line_width = 1 + 2; // # + eol
+
+    for (uint8_t j = 0; j < MAX_FIELD; ++j) {
+        stat_field_width[j] = 1 + midi::port_stat_t::title_len[j];
+
+        for (uint8_t i = 0; i <= MIDI_PORTS; ++i) {
+            const midi::port_stat_t &s = midi::port_stat[i];
+
+            uint8_t m = 1 + cdc_get_width(s[j]);
+            if (m > stat_field_width[j]) { stat_field_width[j] = m; }
+        }
+
+        stat_line_width += stat_field_width[j];
+    }
+}
+
 void stat_print(bool auto_update) {
-    enum {
-        MAX_FIELD = midi::port_stat_t::MAX_FIELD,
-    };
-
-    uint8_t w[MAX_FIELD];
-
     if (auto_update) {
         if (!midi::port_stat_update) {
             return;
@@ -451,35 +492,27 @@ void stat_print(bool auto_update) {
         cdc_println("uptime ", millis(), " ms");
     }
 
+    if (midi::port_stat_update || stat_line_width == 0) {
+        stat_update_field_width();
+    }
+
+    iram_size_t csize = udi_cdc_get_free_tx_buffer();
+
+    if (csize < 2 * (stat_line_width + 3)) return;
+
     midi::port_stat_update = false;
-
-    for (uint8_t j = 0; j < MAX_FIELD; ++j) {
-        w[j] = 1 + midi::port_stat_t::title_len[j];
-
-        for (uint8_t i = 0; i <= MIDI_PORTS; ++i) {
-            const midi::port_stat_t &s = midi::port_stat[i];
-
-            uint8_t m = 1 + cdc_get_width(s[j]);
-            if (m > w[j]) { w[j] = m; }
-        }
-    }
-
-    for (uint8_t i = 0; i <= MIDI_PORTS; ++i) {
-        const midi::port_stat_t &s = midi::port_stat[i];
-
-        for (uint8_t j = 0; j < MAX_FIELD; ++j) {
-            uint8_t m = 1 + cdc_get_width(s[j]);
-            if (m > w[j]) { w[j] = m; }
-        }
-    }
 
     _cdc_print('#');
     for (uint8_t j = 0; j < MAX_FIELD; ++j) {
-        _cdc_print_w(midi::port_stat_t::title[j], w[j]);
+        _cdc_print_w(midi::port_stat_t::title[j], stat_field_width[j]);
     }
     _cdc_println();
 
-    for (uint8_t i = 0; i <= MIDI_PORTS; ++i) {
+    csize -= stat_line_width + 3;
+
+    for (uint8_t i = stat_port_start; i <= MIDI_PORTS; ++i) {
+        if (csize < stat_line_width + 3) return;
+
         const midi::port_stat_t &s = midi::port_stat[i];
 
         if (i < MIDI_PORTS) {
@@ -489,9 +522,11 @@ void stat_print(bool auto_update) {
         }
 
         for (uint8_t j = 0; j < MAX_FIELD; ++j) {
-            _cdc_print_w(s[j], w[j]);
+            _cdc_print_w(s[j], stat_field_width[j]);
         }
         _cdc_println();
+
+        csize -= stat_line_width + 3;
     }
 
     midi::dump_state();
