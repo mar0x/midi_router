@@ -54,6 +54,10 @@ struct ring {
         return res;
     }
 
+    value_t at(index_t i) {
+        return data[(i + begin + MAX) % MAX];
+    }
+
     index_t begin = 0;
     index_t end = 0;
     value_t data[MAX];
