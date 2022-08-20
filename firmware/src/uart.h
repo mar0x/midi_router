@@ -429,6 +429,9 @@ struct uart_list<T> {
     static void tx_low() { T::tx::low(); }
 
     static bool tx_ring_empty() { return T::tx_ring_empty(); }
+    static uint8_t tx_ring_non_empty_mask() {
+        return T::tx_ring_empty() ? 0 : (1 << T::tx_traits::id);
+    }
 
     static void data(uint8_t d) { T::data(d); }
     static void write_byte(uint8_t b) { T::write_byte(b); }
@@ -470,6 +473,10 @@ struct uart_list<T, T2...> {
     static void tx_low() { T::tx::low(); L::tx_low(); }
 
     static bool tx_ring_empty() { return T::tx_ring_empty(); }
+    static uint8_t tx_ring_non_empty_mask() {
+        return (T::tx_ring_empty() ? 0 : (1 << T::tx_traits::id))
+            | L::tx_ring_non_empty_mask();
+    }
 
     static void data(uint8_t d) { T::data(d); L::data(d); }
     static void write_byte(uint8_t b) { T::write_byte(b); L::write_byte(b); }
