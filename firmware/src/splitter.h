@@ -38,9 +38,14 @@ struct splitter_state_t {
     }
 
     void dump() {
-        cdc_println("drew: ", dre_wait_mask);
-        cdc_println("bp:  ", pending_bytes);
-        cdc_println("pq(m/s/f): ", port_queue_mask, " ", port_queue.size(), " ", port_queue.front());
+        iram_size_t csize = udi_cdc_get_free_tx_buffer();
+
+        if (csize >= (iram_size_t) (4 + 2 + 4 + 2 + 11 + 2 + 2 + 2 + 2)) {
+            _cdc_print("dre:"); _cdc_print_hex(dre_wait_mask);
+            _cdc_print(",pp:", pending_bytes, ",pq(m/s/f):");
+            _cdc_print_hex(port_queue_mask);
+            _cdc_println("/", port_queue.size(), "/", port_queue.front());
+        }
     }
 
     uint8_t dre_wait_mask = 0;
@@ -50,15 +55,17 @@ struct splitter_state_t {
 
     uint8_t pending_bytes = 0;
     unsigned long last_byte_time = 0;
+    bool pending_timeout_fired = false;
 
-    ring<32, uint8_t> port_byte_queue[MIDI_PORTS + 1];
+    ring<16, uint8_t> port_byte_queue[MIDI_PORTS + 1];
     ring<8, uint8_t> rt_queue;
+
+    unsigned long last_dump_time = 0;
 };
 
 template<typename UL>
 struct splitter_t {
     enum {
-        ALL_PORTS_MASK = ((1 << MIDI_PORTS) - 1),
         PENDING_TIMEOUT_MS = 2,
     };
 
@@ -76,12 +83,15 @@ struct splitter_t {
         state.pending_bytes = 0;
 
         state.last_byte_time = 0;
+        state.pending_timeout_fired = false;
         pending_timer.cancel();
 
         for (uint8_t i = 0; i < MIDI_PORTS + 1; ++i) {
             state.port_byte_queue[i].clear();
         }
         state.rt_queue.clear();
+
+        state.last_dump_time = 0;
 
         port_stat_update = true;
     }
@@ -147,8 +157,22 @@ struct splitter_t {
         }
 
         if (q.empty() && !is_cmd && (state.port_queue_mask == 0 || state.port_queue.front() != port)) {
-            ui::rx_error(port);
-            ++pstat.rcv_cmd;
+            uint8_t c2 = q.data[(q.begin + q.capacity - 2) % q.capacity];
+            uint8_t c3 = q.data[(q.begin + q.capacity - 3) % q.capacity];
+            uint8_t c4 = q.data[(q.begin + q.capacity - 4) % q.capacity];
+
+            q.push_back(data);
+            q.pop_front();
+
+            if ((midi_cmd_t::command(c3) == CMD_NOTE_ON && data == c2) ||
+                (midi_cmd_t::command(c4) == CMD_NOTE_ON && data == 0)) {
+                ++pstat.stall_bytes;
+            } else {
+                ui::rx_error(port);
+                ++pstat.rcv_cmd;
+
+                dump_queues(millis_(), port);
+            }
 
             return;
         }
@@ -171,12 +195,26 @@ struct splitter_t {
         state.dre_wait_mask &= ~(1 << port);
 
         if (state.dre_wait_mask == 0) {
+            if (state.pending_timeout_fired) {
+                state.pending_timeout_fired = false;
+
+                uint8_t port = state.port_queue_pop();
+
+                ui::rx_error(port);
+                ++port_stat[port].rcv_to;
+
+                dump_queues(millis_(), port);
+            }
+
             process_queue();
         }
     }
 
     static void pending_timeout() {
+        state.last_byte_time = 0;
+
         if (state.dre_wait_mask != 0) {
+            state.pending_timeout_fired = true;
             return;
         }
 
@@ -185,55 +223,64 @@ struct splitter_t {
         ui::rx_error(port);
         ++port_stat[port].rcv_to;
 
+        dump_queues(millis_(), port);
+
         process_queue();
     }
 
     static void dump() {
-        state.dump();
+        if (cdc_dtr) {
+            state.dump();
+        }
     }
 
 private:
     static void send(uint8_t data) {
         UL::write_byte(data);
 
-        if (!UL::tx_ring_empty()) {
-            state.dre_wait_mask = ALL_PORTS_MASK;
-        }
+        state.dre_wait_mask = UL::tx_ring_non_empty_mask();
 
         if (is_midi_cmd(data)) {
-            if (data == CMD_SYS_ACTIVE_S) {
-                ui::tx_active();
-            } else {
-                ui::tx_blink();
-            }
+            ui::tx_data(data == CMD_SYS_ACTIVE_S);
         }
     }
 
     static void process_queue() {
-        uint8_t data;
+        do {
+            uint8_t data;
 
+            if (!pop_queue(data)) {
+                return;
+            }
+
+            send(data);
+        } while(state.dre_wait_mask == 0);
+    }
+
+    static bool pop_queue(uint8_t &data) {
         if (!state.rt_queue.empty()) {
             data = state.rt_queue.pop_front();
-        } else {
-            if (state.port_queue.empty()) {
-                return false;
-            }
-
-            uint8_t port = state.port_queue.front();
-            auto &q = state.port_byte_queue[port];
-
-            if (q.empty()) {
-                return false;
-            }
-
-            data = q.pop_front();
-
-            if (update_pending_bytes(data) == 0) {
-                state.port_queue_pop();
-            }
+            return true;
         }
 
-        send(data);
+        if (state.port_queue.empty()) {
+            return false;
+        }
+
+        uint8_t port = state.port_queue.front();
+        auto &q = state.port_byte_queue[port];
+
+        if (q.empty()) {
+            return false;
+        }
+
+        data = q.pop_front();
+
+        if (update_pending_bytes(data) == 0) {
+            state.port_queue_pop();
+        }
+
+        return true;
     }
 
     static inline uint8_t update_pending_bytes(uint8_t data) {
@@ -257,11 +304,58 @@ private:
                 pending_timer.schedule(state.last_byte_time + PENDING_TIMEOUT_MS);
             }
         } else {
-            state.last_byte_time = 0;
-            pending_timer.cancel();
+            if (state.last_byte_time != 0) {
+                state.last_byte_time = 0;
+                pending_timer.cancel();
+            }
         }
 
         return state.pending_bytes;
+    }
+
+    static inline void dump_queues(unsigned long t, uint8_t port) {
+        if (!cdc_dtr) return;
+
+        if (t - state.last_dump_time < 1000) {
+            return;
+        }
+        state.last_dump_time = t;
+
+        iram_size_t csize = udi_cdc_get_free_tx_buffer();
+
+        static const iram_size_t port_queue_dump_size = 2 + 2 * state.port_queue.capacity + 2;
+
+        if (csize >= port_queue_dump_size) {
+            _cdc_print(state.port_queue.size(), ":");
+            for(uint8_t i = 0; i < state.port_queue.capacity; ++i) {
+                _cdc_print(state.port_queue.data[i],
+                    i == state.port_queue.begin ? "<" : " ");
+            }
+            _cdc_print_eol();
+            csize -= port_queue_dump_size;
+        }
+
+        static const iram_size_t port_byte_queue_dump_size = 2 + 3 + 3 * state.port_byte_queue[0].capacity + 2;
+
+        for (uint8_t p = 0; p < MIDI_PORTS; ++p) {
+            if (csize < port_byte_queue_dump_size) break;
+
+            auto &q = state.port_byte_queue[p];
+
+            _cdc_print(p, p == port ? "*" : " ");
+            _cdc_print_w(q.size(), 2);
+            _cdc_print(":");
+
+            for (uint8_t i = 0; i < q.capacity; ++i) {
+                _cdc_print_hex(q.data[i]);
+                _cdc_print(i == q.begin ? "<" : " ");
+            }
+            _cdc_print_eol();
+
+            csize -= port_byte_queue_dump_size;
+        }
+
+        state.dump();
     }
 
     static splitter_state_t state;
