@@ -17,14 +17,14 @@ if midi_sock_count == 7:
     board_corner_r = 10
     fillet_r = 3
 
-    box_inner_height = 33
+    box_inner_height = 28
     box_thickness = 2
 
     base_stand_d = 8
     screw_cup_hole_d = 5.5
     base_edge_height = 2
 
-    base_stand_h = 3
+    base_stand_h = 2
 
     cover_stand_d = base_stand_d
     cover_stand_d1 = 10
@@ -38,7 +38,7 @@ if midi_sock_count == 7:
     midi_sock_step = 20
     midi_sock_d = 16
     midi_sock_shift = 10 # above board
-    led_shift = midi_sock_shift + 13 # above board
+    led_shift = midi_sock_shift + 11 # above board
     led_size = (5.2, 2.7) # rect
     # or led_size = 2 for round hole
 
@@ -95,7 +95,7 @@ if midi_sock_count == 4 and flat:
     board_corner_r = 10
     fillet_r = 3
 
-    box_inner_height = 33 - 5
+    box_inner_height = 28
     box_thickness = 2
 
     base_stand_d = 8
@@ -116,7 +116,7 @@ if midi_sock_count == 4 and flat:
     midi_sock_step = 20
     midi_sock_d = 16
     midi_sock_shift = 10 # above board
-    led_shift = midi_sock_shift + 13 - 2 # above board
+    led_shift = midi_sock_shift + 11 # above board
     led_size = 2 # round hole
     # or led_size = (5.2, 2.7) for rect
 
