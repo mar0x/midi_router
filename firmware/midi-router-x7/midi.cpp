@@ -2,7 +2,7 @@
 #include <midi.h>
 #include <uart.h>
 #include <crit_sec.h>
-#include <splitter.h>
+#include <bit_splitter.h>
 
 namespace {
 
@@ -34,17 +34,15 @@ using uart_f1 = uart_t<port::F1, 31250, rx_midi_traits<6>, tx_midi_traits<6> >;
 template<> uart_f1::tx_ring_t uart_f1::tx_ring = {};
 template<> uint8_t uart_f1::want_write = 0;
 
-using UL = uart_list<uart_c0, uart_c1, uart_d0, uart_e0, uart_e1, uart_f0, uart_f1>;
+using ALL = uart_list<uart_c0, uart_c1, uart_d0, uart_e0, uart_e1, uart_f0, uart_f1>;
 
-midi::splitter_t<UL> splitter_state;
-template<> midi::splitter_state_t midi::splitter_t<UL>::state = { };
+midi::bit_splitter_t<ALL, ALL> splitter_state;
 
 void splitter_rx_complete(uint8_t port, uint8_t data, bool ferr) {
     splitter_state.rx_complete(port, data, ferr);
 }
 
 void splitter_process_dre(uint8_t port) {
-    splitter_state.process_dre(port);
 }
 
 template<typename T>
@@ -73,6 +71,15 @@ inline void process_dre() {
 namespace midi {
 
 void init(process_byte_t cb) {
+    static bool first_time_init = true;
+
+    if (first_time_init) {
+        ALL::setup();
+        ALL::rxc_int_hi();
+
+        first_time_init = false;
+    }
+
     if (cb) {
         splitter_state.disable();
 
@@ -87,17 +94,13 @@ void init(process_byte_t cb) {
 }
 
 uint8_t send(uint8_t port, const uint8_t *buf, uint8_t size) {
-    return UL::write_buf(port, buf, size);
+    return ALL::write_buf(port, buf, size);
 }
 
 void pending_timeout() {
-    crit_sec cs;
-    splitter_state.pending_timeout();
 }
 
 void dump_state() {
-    crit_sec cs;
-    splitter_state.dump();
 }
 
 }

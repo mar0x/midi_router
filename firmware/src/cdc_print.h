@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <string.h>
+
 extern bool cdc_dtr;
 
 namespace {

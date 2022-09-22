@@ -110,6 +110,22 @@ inline void tx_data(bool active, uint8_t port) {
     }
 }
 
+inline void tx_data_mask(bool active, uint8_t port_mask) {
+    if (active) {
+        for (uint8_t i = 0; i < MIDI_PORTS; ++i) {
+            if (port_mask & (1 << i)) {
+                tx_blink_state[i].active();
+            }
+        }
+    } else {
+        for (uint8_t i = 0; i < MIDI_PORTS; ++i) {
+            if (port_mask & (1 << i)) {
+                tx_blink_state[i].start();
+            }
+        }
+    }
+}
+
 inline void tx_data(bool active) {
     if (active) {
         tx_active();

@@ -49,9 +49,8 @@ using process_dre_t = void (*)(uint8_t port);
 extern port_stat_t port_stat[MIDI_PORTS + 1];
 extern bool port_stat_update;
 
-extern bool port_mon;
-extern bool port_in_mon[MIDI_PORTS];
-extern bool port_out_mon[MIDI_PORTS];
+extern bool mon_enabled;
+extern bool port_mon[2][MIDI_PORTS];
 
 extern artl::timer<> pending_timer;
 
@@ -67,6 +66,8 @@ void dump_state();
 
 void start_mon();
 void stop_mon();
+
+void mon(uint8_t port, bool dir_in, const uint8_t *b, uint8_t size);
 
 void dummy_process_dre(uint8_t port);
 

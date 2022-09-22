@@ -256,6 +256,10 @@ struct uart_t : public RX_TRAITS {
 
     using tx_ring_t = TX_RING;
 
+    enum {
+        tx_mask = (1 << tx_traits::id),
+    };
+
     static USART_t& uart() { return port_traits::uart(); }
 
     static bool dre() { return (uart().STATUS & USART_DREIF_bm) != 0; }
@@ -416,6 +420,10 @@ struct uart_list;
 
 template<typename T>
 struct uart_list<T> {
+    enum {
+        tx_mask = T::tx_mask,
+    };
+
     static void setup() { T::setup(); }
     static void enable_tx() { T::enable_tx(); }
     static void disable_tx() { T::disable_tx(); }
@@ -460,6 +468,10 @@ template<typename T, typename... T2>
 struct uart_list<T, T2...> {
     using L = uart_list<T2...>;
 
+    enum {
+        tx_mask = T::tx_mask | L::tx_mask,
+    };
+
     static void setup() { T::setup(); L::setup(); }
     static void enable_tx() { T::enable_tx(); L::enable_tx(); }
     static void disable_tx() { T::disable_tx(); L::disable_tx(); }
@@ -503,5 +515,10 @@ struct uart_list<T, T2...> {
         } else {
             L::disable_pin_ch(id);
         }
+    }
+
+    template<typename CB>
+    static void tx_enum(CB cb) {
+        CB::enum_action(T::tx_traits::id);
     }
 };
