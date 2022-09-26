@@ -38,32 +38,60 @@ template<> midi::splitter_state_t midi::splitter_t<SPLIT_SRC, SPLIT_DST>::state 
 void merger_rx_complete(uint8_t port, uint8_t data, bool ferr) {
     midi::mon(port, true, &data, 1);
 
+#if 0
+    uint8_t ds = midi_cmd_serial(data);
+
+    if (midi::input_filter(port, data, ds)) {
+        midi::input_channelizer(port, data, ds);
+        uint8_t route = midi::routing(port, data, ds);
+
+        for(uint8_t i = 0; i < MIDI_PORTS; ++i) {
+            if ((route & (1 << i)) == 0) continue;
+
+            uint8_t out_data = data;
+
+            midi::output_channelizer(i, out_data, ds);
+            if (midi::output_filter(i, out_data, ds)) {
+                midi::mixer(port, i, out_data);
+            }
+        }
+    }
+#endif
+
     if (port == 3) {
         splitter_state.rx_complete(port, data, ferr);
     } else {
-#if 0
-        static uint8_t port0_pass = 0;
-        static uint8_t port1_pass = 0;
-
         if (port == 0) {
-            if (is_midi_cmd(data)) {
-                port0_pass = 0;
+            static bool port0_pass = false;
 
-                switch (midi_cmd_t::command(data)) {
-                case CMD_SYS_TICK:
-                case CMD_SYS_CLOCK: goto pass;
-                case CMD_SYS_MTC: port0_pass = 1; goto pass;
-                default: return;
+            if (is_midi_cmd(data)) {
+                if (is_midi_rt(data)) {
+                    switch (data) {
+                    case CMD_SYS_CLOCK:
+                    case CMD_SYS_TICK:
+                    case CMD_SYS_START:
+                    case CMD_SYS_CONT:
+                    case CMD_SYS_STOP: goto pass;
+                    default: return;
+                    }
+                }
+
+                port0_pass = (data == CMD_SYS_EX) || (data == CMD_SYS_MTC);
+
+                if (port0_pass || data == CMD_SYS_EX_END) {
+                    goto pass;
                 }
             } else {
-                if (port0_pass > 0) {
-                    --port0_pass;
+                if (port0_pass) {
                     goto pass;
                 }
                 return;
             }
         }
+#if 0
         if (port == 1) {
+            static uint8_t port1_pass = 0;
+
             if (is_midi_cmd(data)) {
                 port1_pass = 0;
 
@@ -82,8 +110,8 @@ void merger_rx_complete(uint8_t port, uint8_t data, bool ferr) {
                 return;
             }
         }
-pass:
 #endif
+pass:
         merger_state.rx_complete(port, data, ferr);
     }
 }
