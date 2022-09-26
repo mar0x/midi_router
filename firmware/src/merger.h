@@ -53,15 +53,17 @@ struct merger_state_t {
 
     uint8_t dre_wait_mask = 0;
 
-    ring<MIDI_PORTS + 2, uint8_t> port_queue;
+    ring<MIDI_IN_PORTS + 2, uint8_t> port_queue;
     uint8_t port_queue_mask = 0;
 
     uint8_t pending_bytes = 0;
     uint8_t pending_port = 0;
+    uint8_t last_in_cmd[MIDI_IN_PORTS + 1];
+    uint8_t pending_in_bytes[MIDI_IN_PORTS + 1];
     unsigned long last_byte_time = 0;
     bool pending_timeout_fired = false;
 
-    ring<16, uint8_t> port_byte_queue[MIDI_PORTS + 1];
+    ring<16, uint8_t> port_byte_queue[MIDI_IN_PORTS + 1];
     ring<8, uint8_t> rt_queue;
 
     unsigned long last_dump_time = 0;
@@ -83,8 +85,10 @@ struct merger_t {
         state.pending_timeout_fired = false;
         pending_timer.cancel();
 
-        for (uint8_t i = 0; i < MIDI_PORTS + 1; ++i) {
+        for (uint8_t i = 0; i < MIDI_IN_PORTS + 1; ++i) {
             state.port_byte_queue[i].clear();
+            state.last_in_cmd[i] = 0;
+            state.pending_in_bytes[i] = 0;
         }
         state.rt_queue.clear();
 
@@ -116,22 +120,62 @@ struct merger_t {
 
         if (is_cmd) {
             ++pstat.rcv_msgs;
-        }
 
-        if (is_midi_rt(data)) {
-            if (state.rt_queue.full()) {
-                state.rt_queue.pop_front();
-                ui::rx_error(port);
-                ++pstat.rcv_ovf;
+            if (is_midi_rt(data)) {
+                if (state.rt_queue.full()) {
+                    state.rt_queue.pop_front();
+                    ui::rx_error(port);
+                    ++pstat.rcv_ovf;
+                }
+
+                state.rt_queue.push_back(data);
+
+                if (state.dre_wait_mask == 0) {
+                    process_queue();
+                }
+
+                return;
             }
 
-            state.rt_queue.push_back(data);
-
-            if (state.dre_wait_mask == 0) {
-                process_queue();
+            if (data != CMD_SYS_EX_END || state.last_in_cmd[port] != CMD_SYS_EX) {
+                state.last_in_cmd[port] = data;
             }
 
-            return;
+            uint8_t s = midi_cmd_t::cmd_size(data);
+
+            if (s != 0 && s != 0xFF) { --s; }
+            state.pending_in_bytes[port] = s;
+        } else {
+            uint8_t p = state.pending_in_bytes[port];
+            if (p != 0) {
+                if (p != 0xFF) {
+                    --p;
+                    state.pending_in_bytes[port] = p;
+                }
+            } else {
+                ++pstat.rcv_cmd;
+
+                uint8_t c = state.last_in_cmd[port];
+
+                if (c) {
+                    ++pstat.stall_bytes;
+
+                    uint8_t s = midi_cmd_t::cmd_size(c);
+
+                    if (s != 0 && s != 0xFF) { --s; }
+                    if (s != 0 && s != 0xFF) { --s; }
+                    state.pending_in_bytes[port] = s;
+
+                    if (!state.port_byte_queue[port].full()) {
+                        state.port_byte_queue[port].push_back(c);
+                    }
+                } else {
+                    ++pstat.stall_msgs;
+                    ui::rx_error(port);
+
+                    return;
+                }
+            }
         }
 
         auto &q = state.port_byte_queue[port];
@@ -139,27 +183,6 @@ struct merger_t {
         if (q.full()) {
             ui::rx_error(port);
             ++pstat.rcv_ovf;
-
-            return;
-        }
-
-        if (q.empty() && !is_cmd && (state.port_queue_mask == 0 || state.port_queue_front() != port)) {
-            uint8_t c2 = q.data[(q.begin + q.capacity - 2) % q.capacity];
-            uint8_t c3 = q.data[(q.begin + q.capacity - 3) % q.capacity];
-            uint8_t c4 = q.data[(q.begin + q.capacity - 4) % q.capacity];
-
-            q.push_back(data);
-            q.pop_front();
-
-            if ((midi_cmd_t::command(c3) == CMD_NOTE_ON && data == c2) ||
-                (midi_cmd_t::command(c4) == CMD_NOTE_ON && data == 0)) {
-                ++pstat.stall_bytes;
-            } else {
-                ui::rx_error(port);
-                ++pstat.rcv_cmd;
-
-                dump_queues(millis_(), port);
-            }
 
             return;
         }
@@ -274,16 +297,11 @@ private:
 
     static inline uint8_t update_pending_bytes(uint8_t data) {
         uint8_t s = midi_cmd_t::cmd_size(data);
-        if (s == 0) {
-            if (state.pending_bytes != 0 && state.pending_bytes != 0xFF) {
-                --state.pending_bytes;
-            }
-        } else {
-            if (data != CMD_SYS_EX) {
-                state.pending_bytes = s - 1;
-            } else {
-                state.pending_bytes = 0xFF;
-            }
+        if (s != 0) {
+            state.pending_bytes = s;
+        }
+        if (state.pending_bytes != 0 && state.pending_bytes != 0xFF) {
+            --state.pending_bytes;
         }
 
         if (state.pending_bytes != 0) {
@@ -327,7 +345,7 @@ private:
 
         static const iram_size_t port_byte_queue_dump_size = 2 + 3 + 3 * state.port_byte_queue[0].capacity + 2;
 
-        for (uint8_t p = 0; p < MIDI_PORTS; ++p) {
+        for (uint8_t p = 0; p < MIDI_IN_PORTS; ++p) {
             if (csize < port_byte_queue_dump_size) break;
 
             auto &q = state.port_byte_queue[p];
