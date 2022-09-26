@@ -90,4 +90,55 @@ void mon(uint8_t port, bool dir_in, const uint8_t *b, uint8_t size) {
     }
 }
 
+struct port_cfg_t {
+    uint32_t command_filter;
+    uint16_t channel_filter;
+
+    uint8_t filter_state;
+
+    uint8_t channel_map[8];
+};
+
+port_cfg_t in_port_cfg[MIDI_IN_PORTS];
+port_cfg_t out_port_cfg[MIDI_OUT_PORTS];
+
+uint8_t port_input_routing[MIDI_IN_PORTS];
+
+bool input_filter(uint8_t port, uint8_t data, uint8_t ds) {
+    port_cfg_t &cfg = in_port_cfg[port];
+
+    if (ds == 0) {
+        return cfg.filter_state;
+    }
+
+    bool res = (cfg.command_filter & (1 << ds)) != 0;
+    if (res) {
+        uint8_t ch = data & 0x0F;
+        res = (cfg.channel_filter & (1 << ch)) != 0;
+    }
+
+    cfg.filter_state = res;
+
+    return res;
+}
+
+void input_channelizer(uint8_t port, uint8_t &data, uint8_t ds) {
+    if (ds == 0 || ds > 7) {
+        return;
+    }
+
+    port_cfg_t &cfg = in_port_cfg[port];
+
+    uint8_t ch = data & 0x0F;
+    uint8_t cm = cfg.channel_map[ch >> 1];
+    if ((ch & 0x01) == 0) {
+        cm = cm >> 4;
+    } else {
+        cm = cm & 0x0F;
+    }
+
+    data = (data & 0xF0) | cm;
+}
+
+
 }
