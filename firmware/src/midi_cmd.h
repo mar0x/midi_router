@@ -7,34 +7,34 @@
 enum {
     CMD_BIT           = 0x80U,
 
-    CMD_NOTE_OFF      = 0x80U,
-    CMD_NOTE_ON       = 0x90U,
-    CMD_KEY_PRESSURE  = 0xA0U,
-    CMD_CTRL_CHANGE   = 0xB0U,
-    CMD_PROG_CHANGE   = 0xC0U,
-    CMD_CHAN_PRESSURE = 0xD0U,
-    CMD_PITCH_CHANGE  = 0xE0U,
+    CMD_NOTE_OFF      = 0x80U,  // #  1
+    CMD_NOTE_ON       = 0x90U,  // #  2
+    CMD_KEY_PRESSURE  = 0xA0U,  // #  3
+    CMD_CTRL_CHANGE   = 0xB0U,  // #  4
+    CMD_PROG_CHANGE   = 0xC0U,  // #  5
+    CMD_CHAN_PRESSURE = 0xD0U,  // #  6
+    CMD_PITCH_CHANGE  = 0xE0U,  // #  7
 
     CMD_SYS           = 0xF0U,
 
-    CMD_SYS_EX        = 0xF0U,
-    CMD_SYS_EX_END    = 0xF7U,
+    CMD_SYS_EX        = 0xF0U,  // #  8
+    CMD_SYS_EX_END    = 0xF7U,  // # 15
 
-    CMD_SYS_MTC       = 0xF1U,
-    CMD_SYS_SONG_PP   = 0xF2U,
-    CMD_SYS_SONG_SEL  = 0xF3U,
-    CMD_SYS_TUNE_REQ  = 0xF6U,
+    CMD_SYS_MTC       = 0xF1U,  // #  9
+    CMD_SYS_SONG_PP   = 0xF2U,  // # 10
+    CMD_SYS_SONG_SEL  = 0xF3U,  // # 11
+    CMD_SYS_TUNE_REQ  = 0xF6U,  // # 14
 
     CMD_SYS_RT        = 0xF8U,
 
-    CMD_SYS_CLOCK     = 0xF8U,
-    CMD_SYS_TICK      = 0xF9U,
-    CMD_SYS_START     = 0xFAU,
-    CMD_SYS_CONT      = 0xFBU,
-    CMD_SYS_STOP      = 0xFCU,
-    CMD_SYS_UNDEF     = 0xFDU,
-    CMD_SYS_ACTIVE_S  = 0xFEU,
-    CMD_SYS_RESET     = 0xFFU,
+    CMD_SYS_CLOCK     = 0xF8U,  // # 16
+    CMD_SYS_TICK      = 0xF9U,  // # 17
+    CMD_SYS_START     = 0xFAU,  // # 18
+    CMD_SYS_CONT      = 0xFBU,  // # 19
+    CMD_SYS_STOP      = 0xFCU,  // # 20
+    CMD_SYS_UNDEF     = 0xFDU,  // # 21
+    CMD_SYS_ACTIVE_S  = 0xFEU,  // # 22
+    CMD_SYS_RESET     = 0xFFU,  // # 23
 };
 
 enum {
@@ -53,6 +53,16 @@ inline bool is_midi_cmd(uint8_t b) {
 
 inline bool is_midi_sys(uint8_t b) {
     return (b & CMD_SYS) == CMD_SYS;
+}
+
+inline uint8_t midi_cmd_serial(uint8_t b) {
+    if ((b & CMD_BIT) == 0) return 0;
+
+    uint8_t res = 1 + ((b & 0x70) >> 4);
+
+    if ((b & CMD_SYS) != CMD_SYS) return res;
+
+    return res + (b & 0x0F);
 }
 
 struct midi_cmd_t {
@@ -107,7 +117,7 @@ struct midi_cmd_t {
             2, // CMD_PROG_CHANGE   = 0xC0U,
             2, // CMD_CHAN_PRESSURE = 0xD0U,
             3, // CMD_PITCH_CHANGE  = 0xE0U,
-            2, // CMD_SYS_EX        = 0xF0U,
+         0xFF, // CMD_SYS_EX        = 0xF0U,
             2, // CMD_SYS_MTC       = 0xF1U,
             3, // CMD_SYS_SONG_PP   = 0xF2U,
             2, // CMD_SYS_SONG_SEL  = 0xF3U,
