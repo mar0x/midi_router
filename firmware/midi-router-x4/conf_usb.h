@@ -222,6 +222,8 @@
 //@}
 
 #define MIDI_PORTS 4
+#define MIDI_IN_PORTS 4
+#define MIDI_OUT_PORTS 4
 
 /**
  * USB Device Driver Configuration

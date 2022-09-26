@@ -44,8 +44,8 @@ namespace ui {
 
 pulse_state_t pulse_state;
 blink_state_t rst_blink_state;
-blink_state_t rx_blink_state[MIDI_PORTS + 1];
-blink_state_t tx_blink_state[MIDI_PORTS + 1];
+blink_state_t rx_blink_state[MIDI_IN_PORTS + 1];
+blink_state_t tx_blink_state[MIDI_OUT_PORTS + 1];
 
 bool usb_midi_enabled = false;
 

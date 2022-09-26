@@ -49,8 +49,8 @@ namespace ui {
 
 extern pulse_state_t pulse_state;
 extern blink_state_t rst_blink_state;
-extern blink_state_t rx_blink_state[MIDI_PORTS + 1];
-extern blink_state_t tx_blink_state[MIDI_PORTS + 1];
+extern blink_state_t rx_blink_state[MIDI_IN_PORTS + 1];
+extern blink_state_t tx_blink_state[MIDI_OUT_PORTS + 1];
 
 extern bool usb_midi_enabled;
 
@@ -83,13 +83,13 @@ inline void tx_usb_active() { tx_blink_state[USB_LED_ID].active(); }
 inline void rx_error(uint8_t port) { rx_blink_state[port].error(); }
 
 inline void tx_blink() {
-    for (uint8_t i = 0; i < MIDI_PORTS; ++i) {
+    for (uint8_t i = 0; i < MIDI_OUT_PORTS; ++i) {
         tx_blink_state[i].start();
     }
 }
 
 inline void tx_active() {
-    for (uint8_t i = 0; i < MIDI_PORTS; ++i) {
+    for (uint8_t i = 0; i < MIDI_OUT_PORTS; ++i) {
         tx_blink_state[i].active();
     }
 }
@@ -112,13 +112,13 @@ inline void tx_data(bool active, uint8_t port) {
 
 inline void tx_data_mask(bool active, uint8_t port_mask) {
     if (active) {
-        for (uint8_t i = 0; i < MIDI_PORTS; ++i) {
+        for (uint8_t i = 0; i < MIDI_OUT_PORTS; ++i) {
             if (port_mask & (1 << i)) {
                 tx_blink_state[i].active();
             }
         }
     } else {
-        for (uint8_t i = 0; i < MIDI_PORTS; ++i) {
+        for (uint8_t i = 0; i < MIDI_OUT_PORTS; ++i) {
             if (port_mask & (1 << i)) {
                 tx_blink_state[i].start();
             }

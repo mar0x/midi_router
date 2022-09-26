@@ -69,7 +69,7 @@ artl::timer<> active_test_timer;
 uint32_t stat_period = 0;
 bool stat_auto_reset = 0;
 uint8_t stat_port_start = 0;
-midi_cmd_t current_cmd[MIDI_PORTS];
+midi_cmd_t current_cmd[MIDI_IN_PORTS];
 
 void usb_midi_enable(bool enable);
 
@@ -178,7 +178,7 @@ int main(void)
                 uint8_t b[] = { CMD_SYS_ACTIVE_S, CMD_SYS_TICK };
 
                 if (usb_midi_enabled) {
-                    for(uint8_t i = 0; i < MIDI_PORTS; ++i) {
+                    for(uint8_t i = 0; i < MIDI_OUT_PORTS; ++i) {
                         uint8_t res = midi::send(i, &b[i % 2], 1);
                         if (res == 1) {
                             midi::port_stat_t &stat = midi::port_stat[i];
