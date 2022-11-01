@@ -38,7 +38,7 @@ struct usb_midi_buf_t {
         usb_midi_event_t ev[ sizeof(raw) / sizeof(usb_midi_event_t) ];
     };
 
-    uint8_t start = 0;
-    uint8_t end = 0;
-    bool stall = false;
+    uint8_t start;
+    uint8_t end;
+    bool stall;
 };

@@ -207,44 +207,19 @@ struct baud_traits<31250, 16000000> {
     enum { ctrla = 0x1F, ctrlb = 0x00, };
 };
 
-template<uint16_t MAX, typename T, typename PORT>
-struct rx_ring_traits {
-    using port_t = PORT;
-    using rx_ring_t = ring<MAX, T>;
-
-    static bool ring_read(uint8_t &b) {
-        if (!rx_ring.empty()) {
-            b = rx_ring.pop_front();
-            return true;
-        }
-
-        return false;
-    }
-
-    static bool on_rx(uint8_t d) {
-        if (!rx_ring.full()) {
-            rx_ring.push_back(d);
-            return true;
-        }
-
-        return false;
-    }
-
-private:
-    static rx_ring_t rx_ring;
+struct rx_dummy_traits {
 };
 
 struct tx_dummy_traits {
-    static inline void tx_ready(uint8_t s) { }
 };
 
 template<
     typename PORT, unsigned long RATE,
-    typename RX_TRAITS = rx_ring_traits<64, uint8_t, PORT>,
+    typename RX_TRAITS = rx_dummy_traits,
     typename TX_TRAITS = tx_dummy_traits,
     typename PORT_TRAITS = port::traits<PORT>,
     typename BAUD_TRAITS = baud_traits<RATE, F_CPU>,
-    typename TX_RING = ring<64, uint8_t> >
+    typename TX_RING = ring<1, uint8_t> >
 struct uart_t : public RX_TRAITS {
     using rx_traits = RX_TRAITS;
     using tx_traits = TX_TRAITS;
@@ -298,6 +273,8 @@ struct uart_t : public RX_TRAITS {
 
         uart().BAUDCTRLA = baud_traits::ctrla;
         uart().BAUDCTRLB = baud_traits::ctrlb;
+
+        tx_ring_reset();
     }
 
     static void disable() {
@@ -314,84 +291,27 @@ struct uart_t : public RX_TRAITS {
         uart().CTRLB |= USART_TXEN_bm;
     }
 
-    static uint8_t write_buf(const void *d, uint8_t s) {
-        if (s == 1 && tx_ring_empty() && dre()) {
-            data(* (const uint8_t *) d);
+    static bool write_byte_get_dre(uint8_t b) {
+        if (tx_ring_empty() && dre()) {
+            data(b);
 
-            return 1;
+            return false;
         }
 
-        uint8_t res;
+        bool res = tx_ring_avail() > 0;
 
-        crit_sec cs;
+        if (res) {
+            tx_ring_push(b);
 
-        if (tx_ring_avail() > s) {
-            const uint8_t *c = (const uint8_t *) d;
-
-            res = s;
-
-            if (tx_ring_empty() && dre()) {
-                data(*c);
-
-                ++c;
-                --s;
-            }
-
-            while (s != 0) {
-                tx_ring_push(*c);
-
-                ++c;
-                --s;
-            }
-
-            while (dre() && !tx_ring_empty()) { data(tx_ring_pop()); }
-
-            if (!tx_ring_empty()) { dre_int_hi(); }
-
-            want_write = 0;
-        } else {
-            res = 0;
-            want_write = s;
+            dre_int_hi();
         }
 
         return res;
     }
 
-    static uint8_t write_byte(uint8_t b) {
-        if (tx_ring_empty() && dre()) {
-            data(b);
-
-            return 1;
-        }
-
-        if (tx_ring_avail() > 1) {
-            tx_ring_push(b);
-
-            while (dre() && !tx_ring_empty()) { data(tx_ring_pop()); }
-
-            if (!tx_ring_empty()) { dre_int_hi(); }
-
-            want_write = 0;
-
-            return 1;
-        } else {
-            want_write = 1;
-
-            return 0;
-        }
-    }
-
-    static void on_rxc_int() {
-        rx_traits::on_rx(data());
-    }
-
     static void on_dre_int() {
         if (!tx_ring_empty()) {
             data(tx_ring_pop());
-
-            if (want_write && tx_ring_avail() > want_write) {
-                tx_traits::tx_ready(tx_ring_avail() - 1);
-            }
         } else {
             dre_int_off();
         }
@@ -400,7 +320,8 @@ struct uart_t : public RX_TRAITS {
     static inline bool tx_ring_empty() { return tx_ring.empty(); }
     static inline uint8_t tx_ring_pop() { return tx_ring.pop_front(); }
     static inline void tx_ring_push(uint8_t b) { tx_ring.push_back(b); }
-    static inline uint8_t tx_ring_avail() { return tx_ring.capacity - tx_ring.size(); }
+    static inline uint8_t tx_ring_avail() { return tx_ring.avail(); }
+    static inline void tx_ring_reset() { tx_ring.reset(); }
 
     static inline void enable_pin_ch() {
         port_traits::intflags() = port_traits::INT_FLAGS;
@@ -412,7 +333,6 @@ struct uart_t : public RX_TRAITS {
     }
 private:
     static tx_ring_t tx_ring;
-    static uint8_t want_write;
 };
 
 template<typename...>

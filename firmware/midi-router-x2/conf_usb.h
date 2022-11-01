@@ -225,6 +225,9 @@
 #define MIDI_IN_PORTS 2
 #define MIDI_OUT_PORTS 2
 
+#define USB_IN_JACKS 2
+#define USB_OUT_JACKS 2
+
 /**
  * USB Device Driver Configuration
  * @{

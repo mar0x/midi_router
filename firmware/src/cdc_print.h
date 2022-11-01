@@ -23,7 +23,10 @@ void _cdc_print(const char *s) __attribute__((unused));
 void cdc_print(const char *s) __attribute__((unused));
 
 void _cdc_print_hex(uint8_t n) __attribute__((unused));
-void cdc_print_hex(uint8_t n) __attribute__((unused));
+void _cdc_print_hex(uint16_t n) __attribute__((unused));
+void _cdc_print_hex(uint32_t n) __attribute__((unused));
+
+template<typename T> void cdc_print_hex(T n) __attribute__((unused));
 
 void cdc_prompt() __attribute__((unused));
 
@@ -142,7 +145,20 @@ void _cdc_print_hex(uint8_t n) {
     udi_cdc_putc(hex_chars[n & 0x0F]);
 }
 
-void cdc_print_hex(uint8_t n) {
+void _cdc_print_hex(uint16_t n) {
+    _cdc_print_hex((uint8_t)((n >> 8) & 0xFF));
+    _cdc_print_hex((uint8_t)(n & 0xFF));
+}
+
+void _cdc_print_hex(uint32_t n) {
+    _cdc_print_hex((uint8_t)((n >> 24) & 0xFF));
+    _cdc_print_hex((uint8_t)((n >> 16) & 0xFF));
+    _cdc_print_hex((uint8_t)((n >> 8) & 0xFF));
+    _cdc_print_hex((uint8_t)(n & 0xFF));
+}
+
+template<typename T>
+void cdc_print_hex(T n) {
     if (cdc_dtr) {
         _cdc_print_hex(n);
     }

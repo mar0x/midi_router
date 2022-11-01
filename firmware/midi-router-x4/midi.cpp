@@ -2,188 +2,50 @@
 #include <midi.h>
 #include <uart.h>
 #include <crit_sec.h>
-#include <splitter.h>
-#include <merger.h>
+#include <midi_mixer.h>
 
 namespace {
 
 using uart_c0 = uart_t<port::C0, 31250, rx_midi_traits<2>, tx_midi_traits<0> >;
 template<> uart_c0::tx_ring_t uart_c0::tx_ring = {};
-template<> uint8_t uart_c0::want_write = 0;
 
 using uart_c1 = uart_t<port::C1, 31250, rx_midi_traits<3>, tx_midi_traits<1> >;
 template<> uart_c1::tx_ring_t uart_c1::tx_ring = {};
-template<> uint8_t uart_c1::want_write = 0;
 
 using uart_d0 = uart_t<port::D0, 31250, rx_midi_traits<0>, tx_midi_traits<2> >;
 template<> uart_d0::tx_ring_t uart_d0::tx_ring = {};
-template<> uint8_t uart_d0::want_write = 0;
 
 using uart_e0 = uart_t<port::E0, 31250, rx_midi_traits<1>, tx_midi_traits<3> >;
 template<> uart_e0::tx_ring_t uart_e0::tx_ring = {};
-template<> uint8_t uart_e0::want_write = 0;
 
 using ALL = uart_list<uart_c0, uart_c1, uart_d0, uart_e0>;
-using MERGE_SRC = uart_list<uart_d0, uart_e0, uart_c0>;
-using MERGE_DST = uart_list<uart_c0>;
-using SPLIT_SRC = uart_c1;
-using SPLIT_DST = uart_list<uart_c1, uart_d0, uart_e0>;
-
-midi::merger_t<MERGE_SRC, MERGE_DST> merger_state;
-template<> midi::merger_state_t midi::merger_t<MERGE_SRC, MERGE_DST>::state = { };
-
-midi::splitter_t<SPLIT_SRC, SPLIT_DST> splitter_state;
-template<> midi::splitter_state_t midi::splitter_t<SPLIT_SRC, SPLIT_DST>::state = { };
-
-void merger_rx_complete(uint8_t port, uint8_t data, bool ferr) {
-    midi::mon(port, true, &data, 1);
-
-#if 0
-    uint8_t ds = midi_cmd_serial(data);
-
-    if (midi::input_filter(port, data, ds)) {
-        midi::input_channelizer(port, data, ds);
-        uint8_t route = midi::routing(port, data, ds);
-
-        for(uint8_t i = 0; i < MIDI_PORTS; ++i) {
-            if ((route & (1 << i)) == 0) continue;
-
-            uint8_t out_data = data;
-
-            midi::output_channelizer(i, out_data, ds);
-            if (midi::output_filter(i, out_data, ds)) {
-                midi::mixer(port, i, out_data);
-            }
-        }
-    }
-#endif
-
-    if (port == 3) {
-        splitter_state.rx_complete(port, data, ferr);
-    } else {
-        if (port == 0) {
-            static bool port0_pass = false;
-
-            if (is_midi_cmd(data)) {
-                if (is_midi_rt(data)) {
-                    switch (data) {
-                    case CMD_SYS_CLOCK:
-                    case CMD_SYS_TICK:
-                    case CMD_SYS_START:
-                    case CMD_SYS_CONT:
-                    case CMD_SYS_STOP: goto pass;
-                    default: return;
-                    }
-                }
-
-                port0_pass = (data == CMD_SYS_EX) || (data == CMD_SYS_MTC);
-
-                if (port0_pass || data == CMD_SYS_EX_END) {
-                    goto pass;
-                }
-            } else {
-                if (port0_pass) {
-                    goto pass;
-                }
-                return;
-            }
-        }
-#if 0
-        if (port == 1) {
-            static uint8_t port1_pass = 0;
-
-            if (is_midi_cmd(data)) {
-                port1_pass = 0;
-
-                switch (midi_cmd_t::command(data)) {
-                case CMD_SYS_TICK:
-                case CMD_SYS_CLOCK: goto pass;
-                case CMD_SYS_MTC: port1_pass = 1; goto pass;
-                case CMD_CTRL_CHANGE: port1_pass = 2; goto pass;
-                default: return;
-                }
-            } else {
-                if (port1_pass > 0) {
-                    --port1_pass;
-                    goto pass;
-                }
-                return;
-            }
-        }
-#endif
-pass:
-        merger_state.rx_complete(port, data, ferr);
-    }
-}
-
-void merger_process_dre(uint8_t port) {
-    if (port == 3) {
-        splitter_state.process_dre(port);
-    } else {
-        merger_state.process_dre(port);
-    }
-}
 
 template<typename T>
-inline void rx_complete() {
+inline void process_rxc() {
     crit_sec cs;
     bool ferr = T::ferr();
-    midi::on_rx_complete(T::rx_traits::id, T::data(), ferr);
-}
-
-template<typename T>
-inline void process_bit() {
+    midi::process_rxc(T::rx_traits::id, T::data(), ferr);
 }
 
 template<typename T>
 inline void process_dre() {
     crit_sec cs;
     T::on_dre_int();
-
-    midi::on_dre(T::tx_traits::id);
+    midi::mixer[T::tx_traits::id].on_dre_int();
 }
 
 }
 
 namespace midi {
 
-void init(process_byte_t cb) {
-    static bool first_time_init = true;
+void setup() {
+    ALL::setup();
+    ALL::rxc_int_hi();
 
-    if (first_time_init) {
-        ALL::setup();
-        ALL::rxc_int_hi();
-
-        first_time_init = false;
-    }
-
-    if (cb) {
-        merger_state.disable();
-        splitter_state.disable();
-
-        on_rx_complete = cb;
-        on_dre = dummy_process_dre;
-    } else {
-        merger_state.enable();
-        splitter_state.enable();
-
-        on_rx_complete = merger_rx_complete;
-        on_dre = merger_process_dre;
-    }
-}
-
-uint8_t send(uint8_t port, const uint8_t *buf, uint8_t size) {
-    return ALL::write_buf(port, buf, size);
-}
-
-void pending_timeout() {
-    crit_sec cs;
-    merger_state.pending_timeout();
-}
-
-void dump_state() {
-    crit_sec cs;
-    merger_state.dump();
+    setup_mixer<uart_c0>();
+    setup_mixer<uart_c1>();
+    setup_mixer<uart_d0>();
+    setup_mixer<uart_e0>();
 }
 
 }
@@ -191,7 +53,7 @@ void dump_state() {
 
 ISR(USARTC0_RXC_vect)
 {
-    rx_complete<uart_c0>();
+    process_rxc<uart_c0>();
 }
 
 ISR(USARTC0_DRE_vect)
@@ -199,15 +61,10 @@ ISR(USARTC0_DRE_vect)
     process_dre<uart_c0>();
 }
 
-ISR(PORTC_INT0_vect)
-{
-    process_bit<uart_c0>();
-}
-
 
 ISR(USARTC1_RXC_vect)
 {
-    rx_complete<uart_c1>();
+    process_rxc<uart_c1>();
 }
 
 ISR(USARTC1_DRE_vect)
@@ -215,15 +72,10 @@ ISR(USARTC1_DRE_vect)
     process_dre<uart_c1>();
 }
 
-ISR(PORTC_INT1_vect)
-{
-    process_bit<uart_c1>();
-}
-
 
 ISR(USARTD0_RXC_vect)
 {
-    rx_complete<uart_d0>();
+    process_rxc<uart_d0>();
 }
 
 ISR(USARTD0_DRE_vect)
@@ -231,23 +83,13 @@ ISR(USARTD0_DRE_vect)
     process_dre<uart_d0>();
 }
 
-ISR(PORTD_INT0_vect)
-{
-    process_bit<uart_d0>();
-}
-
 
 ISR(USARTE0_RXC_vect)
 {
-    rx_complete<uart_e0>();
+    process_rxc<uart_e0>();
 }
 
 ISR(USARTE0_DRE_vect)
 {
     process_dre<uart_e0>();
-}
-
-ISR(PORTE_INT0_vect)
-{
-    process_bit<uart_e0>();
 }

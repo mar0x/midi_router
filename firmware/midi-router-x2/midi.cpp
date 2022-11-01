@@ -2,85 +2,42 @@
 #include <midi.h>
 #include <uart.h>
 #include <crit_sec.h>
-#include <bit_splitter.h>
+#include <midi_mixer.h>
 
 namespace {
 
 using uart_c0 = uart_t<port::C0, 31250, rx_midi_traits<0>, tx_midi_traits<0> >;
 template<> uart_c0::tx_ring_t uart_c0::tx_ring = {};
-template<> uint8_t uart_c0::want_write = 0;
 
 using uart_c1 = uart_t<port::C1, 31250, rx_midi_traits<1>, tx_midi_traits<1> >;
 template<> uart_c1::tx_ring_t uart_c1::tx_ring = {};
-template<> uint8_t uart_c1::want_write = 0;
 
 using ALL = uart_list<uart_c0, uart_c1>;
 
-midi::bit_splitter_t<ALL, ALL> splitter_state;
-
-void splitter_rx_complete(uint8_t port, uint8_t data, bool ferr) {
-    splitter_state.rx_complete(port, data, ferr);
-}
-
-void splitter_process_dre(uint8_t port) {
-}
-
 template<typename T>
-inline void rx_complete() {
+inline void process_rxc() {
     crit_sec cs;
     bool ferr = T::ferr();
-    midi::on_rx_complete(T::rx_traits::id, T::data(), ferr);
-}
-
-template<typename T>
-inline void process_bit() {
-    crit_sec cs;
-    splitter_state.process_bit(T::rx_traits::id, T::rx::read());
+    midi::process_rxc(T::rx_traits::id, T::data(), ferr);
 }
 
 template<typename T>
 inline void process_dre() {
     crit_sec cs;
     T::on_dre_int();
-
-    midi::on_dre(T::tx_traits::id);
+    midi::mixer[T::tx_traits::id].on_dre_int();
 }
 
 }
 
 namespace midi {
 
-void init(process_byte_t cb) {
-    static bool first_time_init = true;
+void setup() {
+    ALL::setup();
+    ALL::rxc_int_hi();
 
-    if (first_time_init) {
-        ALL::setup();
-        ALL::rxc_int_hi();
-
-        first_time_init = false;
-    }
-
-    if (cb) {
-        splitter_state.disable();
-
-        on_rx_complete = cb;
-        on_dre = dummy_process_dre;
-    } else {
-        splitter_state.enable();
-
-        on_rx_complete = splitter_rx_complete;
-        on_dre = splitter_process_dre;
-    }
-}
-
-uint8_t send(uint8_t port, const uint8_t *buf, uint8_t size) {
-    return ALL::write_buf(port, buf, size);
-}
-
-void pending_timeout() {
-}
-
-void dump_state() {
+    setup_mixer<uart_c0>();
+    setup_mixer<uart_c1>();
 }
 
 }
@@ -88,7 +45,7 @@ void dump_state() {
 
 ISR(USARTC0_RXC_vect)
 {
-    rx_complete<uart_c0>();
+    process_rxc<uart_c0>();
 }
 
 ISR(USARTC0_DRE_vect)
@@ -96,23 +53,13 @@ ISR(USARTC0_DRE_vect)
     process_dre<uart_c0>();
 }
 
-ISR(PORTC_INT0_vect)
-{
-    process_bit<uart_c0>();
-}
-
 
 ISR(USARTC1_RXC_vect)
 {
-    rx_complete<uart_c1>();
+    process_rxc<uart_c1>();
 }
 
 ISR(USARTC1_DRE_vect)
 {
     process_dre<uart_c1>();
-}
-
-ISR(PORTC_INT1_vect)
-{
-    process_bit<uart_c1>();
 }

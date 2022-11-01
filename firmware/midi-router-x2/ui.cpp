@@ -40,11 +40,12 @@
 #include <artl/button.h>
 #include <artl/digital_in.h>
 #include <timer.h>
-#include <artl/timer.h>
 
 namespace {
 
-bool led_test = false;
+struct none {
+    static void write(bool v) { }
+};
 
 }
 
@@ -59,25 +60,26 @@ void init(void)
     led_tx0::setup();
     led_tx1::setup();
 
+    rx_blink_state[0].setup<led_rx0>();
+    rx_blink_state[1].setup<led_rx1>();
+    rx_blink_state[USB_LED_ID].setup<none>();
+
+    tx_blink_state[0].setup<led_tx0>();
+    tx_blink_state[1].setup<led_tx1>();
+    tx_blink_state[USB_LED_ID].setup<none>();
+
+    pulse_state.setup<led_pwr>();
+    rst_blink_state.setup<led_pwr>();
+
+    timer_enable();
+}
+
+void timer_enable() {
     TCD2.INTCTRLA |= TC2_HUNFINTLVL_MED_gc; // enable HIGH underflow interrupt, pri level 2 (see 15.10.5 in AU manual)
 }
 
-void powerdown(void)
-{
+void timer_disable() {
     TCD2.INTCTRLA &= ~TC2_HUNFINTLVL_MED_gc; // disable HIGH underflow interrupt, pri level 2 (see 15.10.5 in AU manual)
-
-    led_pwr::low();
-
-    led_rx0::low();
-    led_rx1::low();
-
-    led_tx0::low();
-    led_tx1::low();
-}
-
-void wakeup(void)
-{
-    TCD2.INTCTRLA |= TC2_HUNFINTLVL_MED_gc; // enable HIGH underflow interrupt, pri level 2 (see 15.10.5 in AU manual)
 }
 
 bool btn_update(unsigned long t) {
@@ -88,94 +90,29 @@ bool btn_down() {
     return false;
 }
 
-void usb_midi_disable() {
-    usb_midi_enabled = false;
-}
-
-void led_test_enable() {
-    if (led_test) return;
-
-    led_test = true;
-
-    led_pwr::high();
-
-    led_rx0::high();
-    led_rx1::high();
-
-    led_tx0::high();
-    led_tx1::high();
-}
-
-void led_test_disable() {
-    if (!led_test) return;
-
-    led_test = false;
-
-    pulse_state.write<led_pwr>();
-
-    rx_blink_state[0].force_write<led_rx0>();
-    rx_blink_state[1].force_write<led_rx1>();
-
-    tx_blink_state[0].force_write<led_tx0>();
-    tx_blink_state[1].force_write<led_tx1>();
-}
-
 void startup_animation() {
     const unsigned long frame_delay = 150;
-    unsigned long t = millis();
 
-    artl::timer<> next_frame;
-    next_frame.schedule(t + frame_delay);
-    uint8_t frame_no = 0;
-
-    while (true) {
-        sleepmgr_enter_sleep();
-
-        if (!tc_flag) continue;
-
-        tc_flag = 0;
-
-        t = millis();
-
-        if (!next_frame.update(t)) continue;
-
-        ++frame_no;
-
+    for (uint8_t frame_no = 0; frame_no < 7; ++frame_no) {
         switch (frame_no) {
-        case 1: rx_blink(0); break;
-        case 2: rx_blink(1); break;
-        case 3: tx_blink(0); break;
-        case 4: tx_blink(1); break;
+        case 0: rx_blink(0); break;
+        case 1: rx_blink(1); break;
+        case 2: tx_blink(0); break;
+        case 3: tx_blink(1); break;
+        case 4: tx_blink(0); break;
         case 5: rx_blink(1); break;
         case 6: rx_blink(0); break;
-        case 7: /* blank frame */; break;
-        }
-
-        if (frame_no < 7) {
-            next_frame.schedule(t + frame_delay);
-        } else {
-            break;
         }
     }
+
+    delay(frame_delay);
 
     if (!usb_midi_enabled) { usb_midi_disable(); }
 }
 
 }
 
-using namespace ui;
-
 ISR(TCD2_HUNF_vect)
 {
-    if (led_test) {
-        return;
-    }
-
-    pulse_state.write<led_pwr>();
-
-    rx_blink_state[0].write<led_rx0>();
-    rx_blink_state[1].write<led_rx1>();
-
-    tx_blink_state[0].write<led_tx0>();
-    tx_blink_state[1].write<led_tx1>();
+    ui::led_update();
 }

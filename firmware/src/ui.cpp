@@ -39,6 +39,11 @@
 
 #include "blink_state.h"
 #include "pulse_state.h"
+#include "timer.h"
+
+namespace {
+bool led_test = false;
+}
 
 namespace ui {
 
@@ -48,5 +53,106 @@ blink_state_t rx_blink_state[MIDI_IN_PORTS + 1];
 blink_state_t tx_blink_state[MIDI_OUT_PORTS + 1];
 
 bool usb_midi_enabled = false;
+
+void powerdown(void)
+{
+    timer_disable();
+
+    rst_blink_state.write(false);
+
+    for(uint8_t i = 0; i <= USB_LED_ID; ++i) {
+        rx_blink_state[i].write(false);
+        tx_blink_state[i].write(false);
+    }
+}
+
+void wakeup(void)
+{
+    timer_enable();
+}
+
+void usb_midi_disable() {
+    usb_midi_enabled = false;
+
+    rx_blink_state[USB_LED_ID].stop();
+    rx_blink_state[USB_LED_ID].write(true);
+
+    tx_blink_state[USB_LED_ID].stop();
+    tx_blink_state[USB_LED_ID].write(true);
+}
+
+void led_test_enable() {
+    if (led_test) return;
+
+    led_test = true;
+
+    rst_blink_state.write(true);
+
+    for(uint8_t i = 0; i <= USB_LED_ID; ++i) {
+        rx_blink_state[i].write(true);
+        tx_blink_state[i].write(true);
+    }
+}
+
+void led_test_disable() {
+    if (!led_test) return;
+
+    led_test = false;
+
+    if (!btn_down()) {
+        pulse_state.force_write();
+    } else {
+        rst_blink_state.force_write();
+    }
+
+    for(uint8_t i = 0; i < USB_LED_ID; ++i) {
+        rx_blink_state[i].force_write();
+        tx_blink_state[i].force_write();
+    }
+
+    if (usb_midi_enabled) {
+        rx_blink_state[USB_LED_ID].force_write();
+        tx_blink_state[USB_LED_ID].force_write();
+    } else {
+        rx_blink_state[USB_LED_ID].write(true);
+        tx_blink_state[USB_LED_ID].write(true);
+    }
+}
+
+void led_update() {
+    if (led_test) {
+        if (btn_down()) {
+            rst_blink_state.write();
+        }
+
+        return;
+    }
+
+    if (!btn_down()) {
+        pulse_state.write();
+    } else {
+        rst_blink_state.write();
+    }
+
+    for(uint8_t i = 0; i <= USB_LED_ID; ++i) {
+        rx_blink_state[i].write();
+        tx_blink_state[i].write();
+    }
+}
+
+void generic_startup_animation() {
+    const unsigned long frame_delay = 150;
+
+    for (uint8_t frame_no = 0; frame_no <= MIDI_PORTS; ++frame_no) {
+        delay(frame_delay);
+
+        rx_blink(frame_no ? frame_no - 1 : MIDI_PORTS);
+        tx_blink(MIDI_PORTS - frame_no);
+    }
+
+    delay(frame_delay); // blank frame
+
+    if (!usb_midi_enabled) { usb_midi_disable(); }
+}
 
 }

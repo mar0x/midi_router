@@ -13,7 +13,7 @@ namespace midi {
 struct splitter_state_t {
     uint8_t dre_wait_mask = 0;
 
-    ring<16, uint8_t> queue;
+    ring<15, uint8_t> queue;
 };
 
 template<typename SRC, typename DST>

@@ -3,6 +3,8 @@
 #include <stdint.h>
 
 struct blink_state_t {
+    using write_f = void (*)(bool v);
+
     enum {
         START = 0x8000,
         MIN = 0x1000,
@@ -14,6 +16,8 @@ struct blink_state_t {
         MIN_ERROR = STEP,
     };
 
+    static void dummy_write(bool v) { }
+
     static bool get(uint16_t state) {
         uint8_t p = state >> 8;
 
@@ -23,6 +27,15 @@ struct blink_state_t {
         p += p;
 
         return ((state & 0xFF) <= p);
+    }
+
+    blink_state_t() : write_cb(dummy_write) {
+        reset();
+    }
+
+    template<typename T>
+    void setup() {
+        write_cb = T::write;
     }
 
     bool get() const {
@@ -68,29 +81,39 @@ struct blink_state_t {
         }
     }
 
-    template<typename T>
     void write() {
         if (state) {
             bool v = get();
             if (v != last_write) {
                 last_write = v;
-                T::write(v);
+                write_cb(v);
             }
 
             next();
         }
     }
 
-    template<typename T>
     void force_write() {
         bool v = state ? get() : false;
 
         last_write = v;
-        T::write(v);
+        write_cb(v);
     }
 
-    uint16_t state = 0;
-    uint8_t active_state = 0;
-    uint8_t error_state = 0;
-    bool last_write = false;
+    void write(bool v) {
+        write_cb(v);
+    }
+
+    void reset() {
+        state = 0;
+        active_state = 0;
+        error_state = 0;
+        last_write = false;
+    }
+
+    uint16_t state;
+    uint8_t active_state;
+    uint8_t error_state;
+    bool last_write;
+    write_f write_cb;
 };

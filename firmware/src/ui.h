@@ -146,6 +146,12 @@ void usb_midi_disable();
 void led_test_enable();
 void led_test_disable();
 
+void timer_enable();
+void timer_disable();
+
 void startup_animation();
+void generic_startup_animation();
+
+void led_update();
 
 }

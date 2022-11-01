@@ -39,16 +39,12 @@
 #include "led.h"
 #include <artl/button.h>
 #include <artl/digital_in.h>
-#include <timer.h>
-#include <artl/timer.h>
 
 namespace {
 
 using btn_in = artl::digital_in<artl::port::C, 1>;
 
 artl::button<> btn;
-
-bool led_test = false;
 
 }
 
@@ -70,29 +66,39 @@ void init(void)
 
     btn_in::setup();
 
+    led_rx0::high();
+
+    rx_blink_state[0].setup<led_rx0>();
+    rx_blink_state[1].setup<led_rx1>();
+    rx_blink_state[2].setup<led_rx2>();
+    rx_blink_state[3].setup<led_rx3>();
+    rx_blink_state[USB_LED_ID].setup<led_rxusb>();
+
+    tx_blink_state[0].setup<led_tx0>();
+    tx_blink_state[1].setup<led_tx1>();
+    tx_blink_state[2].setup<led_tx2>();
+    tx_blink_state[3].setup<led_tx3>();
+    tx_blink_state[USB_LED_ID].setup<led_txusb>();
+
+    pulse_state.setup<led_pwr>();
+    rst_blink_state.setup<led_pwr>();
+
+    led_rx1::high();
+
+    tx_blink_state[0].write(true);
+
+    timer_enable();
+
+    led_rx2::high();
+    tx_blink_state[3].write(true);
+}
+
+void timer_enable() {
     TCD2.INTCTRLA |= TC2_HUNFINTLVL_MED_gc; // enable HIGH underflow interrupt, pri level 2 (see 15.10.5 in AU manual)
 }
 
-void powerdown(void)
-{
+void timer_disable() {
     TCD2.INTCTRLA &= ~TC2_HUNFINTLVL_MED_gc; // disable HIGH underflow interrupt, pri level 2 (see 15.10.5 in AU manual)
-
-    led_pwr::low();
-    led_txusb::low();
-    led_rxusb::low();
-    led_rx0::low();
-    led_rx1::low();
-    led_rx2::low();
-    led_rx3::low();
-    led_tx0::low();
-    led_tx1::low();
-    led_tx2::low();
-    led_tx3::low();
-}
-
-void wakeup(void)
-{
-    TCD2.INTCTRLA |= TC2_HUNFINTLVL_MED_gc; // enable HIGH underflow interrupt, pri level 2 (see 15.10.5 in AU manual)
 }
 
 bool btn_update(unsigned long t) {
@@ -103,135 +109,15 @@ bool btn_down() {
     return btn.down();
 }
 
-void usb_midi_disable() {
-    usb_midi_enabled = false;
-
-    rx_blink_state[USB_LED_ID].stop();
-    led_rxusb::high();
-
-    tx_blink_state[USB_LED_ID].stop();
-    led_txusb::high();
-}
-
-void led_test_enable() {
-    if (led_test) return;
-
-    led_test = true;
-
-    led_pwr::high();
-    led_txusb::high();
-    led_rxusb::high();
-
-    led_rx0::high();
-    led_rx1::high();
-    led_rx2::high();
-    led_rx3::high();
-
-    led_tx0::high();
-    led_tx1::high();
-    led_tx2::high();
-    led_tx3::high();
-}
-
-void led_test_disable() {
-    if (!led_test) return;
-
-    led_test = false;
-
-    if (!btn.down()) {
-        pulse_state.force_write<led_pwr>();
-    } else {
-        rst_blink_state.force_write<led_pwr>();
-    }
-
-    rx_blink_state[0].force_write<led_rx0>();
-    rx_blink_state[1].force_write<led_rx1>();
-    rx_blink_state[2].force_write<led_rx2>();
-    rx_blink_state[3].force_write<led_rx3>();
-
-    tx_blink_state[0].force_write<led_tx0>();
-    tx_blink_state[1].force_write<led_tx1>();
-    tx_blink_state[2].force_write<led_tx2>();
-    tx_blink_state[3].force_write<led_tx3>();
-
-    if (usb_midi_enabled) {
-        rx_blink_state[USB_LED_ID].force_write<led_rxusb>();
-        tx_blink_state[USB_LED_ID].force_write<led_txusb>();
-    } else {
-        led_rxusb::high();
-        led_txusb::high();
-    }
-}
-
 void startup_animation() {
-    const unsigned long frame_delay = 150;
-    unsigned long t = millis();
+    generic_startup_animation();
 
-    artl::timer<> next_frame;
-    next_frame.schedule(t + frame_delay);
-    uint8_t frame_no = 0;
-
-    while (true) {
-        sleepmgr_enter_sleep();
-
-        if (!tc_flag) continue;
-
-        tc_flag = 0;
-
-        t = millis();
-
-        if (!next_frame.update(t)) continue;
-
-        ++frame_no;
-
-        switch (frame_no) {
-        case 1: rx_blink(4); tx_blink(4); break;
-        case 2: rx_blink(0); tx_blink(3); break;
-        case 3: rx_blink(1); tx_blink(2); break;
-        case 4: rx_blink(2); tx_blink(1); break;
-        case 5: rx_blink(3); tx_blink(0); break;
-        case 6: /* blank frame */; break;
-        }
-
-        if (frame_no < 6) {
-            next_frame.schedule(t + frame_delay);
-        } else {
-            break;
-        }
-    }
-
-    if (!usb_midi_enabled) { usb_midi_disable(); }
+    led_rx3::high();
 }
 
 }
-
-using namespace ui;
 
 ISR(TCD2_HUNF_vect)
 {
-    if (led_test) {
-        if (btn.down()) {
-            rst_blink_state.write<led_pwr>();
-        }
-
-        return;
-    }
-
-    if (!btn.down()) {
-        pulse_state.write<led_pwr>();
-    } else {
-        rst_blink_state.write<led_pwr>();
-    }
-
-    rx_blink_state[0].write<led_rx0>();
-    rx_blink_state[1].write<led_rx1>();
-    rx_blink_state[2].write<led_rx2>();
-    rx_blink_state[3].write<led_rx3>();
-    rx_blink_state[4].write<led_rxusb>();
-
-    tx_blink_state[0].write<led_tx0>();
-    tx_blink_state[1].write<led_tx1>();
-    tx_blink_state[2].write<led_tx2>();
-    tx_blink_state[3].write<led_tx3>();
-    tx_blink_state[4].write<led_txusb>();
+    ui::led_update();
 }

@@ -22,8 +22,10 @@ CSRCS = \
        $(BOARD)/midi.cpp                                         \
        src/main.cpp                                              \
        src/midi.cpp                                              \
+       src/midi_mon.cpp                                          \
        src/timer.cpp                                             \
        src/ui.cpp                                                \
+       src/usb.cpp                                               \
 
 # List of assembler source files.
 ASSRCS = \

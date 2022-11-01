@@ -15,6 +15,9 @@ struct serial_cmd_t {
         CMD_MODE_LED_TEST,      // ML
         CMD_MODE_ACTIVE_TEST,   // MT
         CMD_UPTIME,             // U
+        CMD_CONF_FILTER,        // CF
+        CMD_CONF_CHANNELIZER,   // CC
+        CMD_CONF_ROUTING,       // CR
         CMD_PORT_STAT,          // P
         CMD_PORT_STAT_RESET,    // R
         CMD_HELP,               // ?
@@ -279,6 +282,9 @@ serial_cmd_t::parse() {
             if (b[0] == 'M' && b[1] == 'R') { command_ = CMD_MODE_ROUTER; }
             if (b[0] == 'M' && b[1] == 'L') { command_ = CMD_MODE_LED_TEST; }
             if (b[0] == 'M' && b[1] == 'T') { command_ = CMD_MODE_ACTIVE_TEST; }
+            if (b[0] == 'C' && b[1] == 'F') { command_ = CMD_CONF_FILTER; }
+            if (b[0] == 'C' && b[1] == 'C') { command_ = CMD_CONF_CHANNELIZER; }
+            if (b[0] == 'C' && b[1] == 'R') { command_ = CMD_CONF_ROUTING; }
             break;
         }
     }
@@ -293,6 +299,10 @@ M - MIDI monitor
 U - show uptime
 P [s] [R] - port stats, every s sec, R - auto reset
 R - reset port stats
+
+CF [I|R|O] [N] [F] - conf filter
+CC [I|O] [N] [C] - conf channelizer
+CR [I|R|O] [N] [R] - conf routing
 
 MS - mode splitter
 MR - mode router

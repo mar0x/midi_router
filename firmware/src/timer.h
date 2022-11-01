@@ -9,4 +9,6 @@ void yield();
 
 void timer_init();
 
+void delay(unsigned long ms);
+
 extern volatile uint8_t tc_flag;

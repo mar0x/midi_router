@@ -2,6 +2,10 @@
 #include <avr/interrupt.h>
 #include <avr/sleep.h>      // Include for sleep mode (see 'wait_for_interrupt()')
 
+extern "C" {
+#include "asf.h"
+}
+
 #include "crit_sec.h"
 /*
 #define clk2usec(a) ( (a) * 1000000L / (F_CPU) )
@@ -201,4 +205,21 @@ void timer_init()
     timer_init(&TCD2);
 
     TCD2.INTCTRLA |= TC2_LUNFINTLVL_MED_gc; // enable LOW underflow interrupt, pri level 2 (see 15.10.5 in AU manual)
+}
+
+void delay(unsigned long ms)
+{
+    const unsigned long max_delay = ((unsigned long) -1) / 2;
+
+    unsigned long t = millis();
+    unsigned long ret_t = t + ms;
+
+    do {
+        sleepmgr_enter_sleep();
+
+        if (!tc_flag) continue;
+        tc_flag = 0;
+
+        t = millis();
+    } while (t - ret_t >= max_delay);
 }
