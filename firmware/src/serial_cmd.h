@@ -279,7 +279,7 @@ V - show version
 S - serial number
 H - hardware revision
 
-M - MIDI monitor
+M [I|O] - MIDI monitor
 U - show uptime
 P [s] [R] - port stats, every s sec, R - auto reset
 R - reset port stats

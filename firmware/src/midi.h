@@ -15,19 +15,17 @@ struct port_stat_t {
         MAX_FIELD = 8,
     };
 
+    static const char *title[MAX_FIELD];
+    static const uint8_t title_len[MAX_FIELD];
+
     uint32_t operator[](uint8_t i) const {
         return (&rcv_bytes)[i];
     }
 
     void reset() {
-        rcv_bytes = 0;
-        rcv_msgs = 0;
-        snd_bytes = 0;
-        snd_msgs = 0;
-        snd_ovf = 0;
-        stall_ms = 0;
-        stall_bytes = 0;
-        stall_msgs = 0;
+        for (uint8_t i = 0; i < MAX_FIELD; ++i) {
+            (&rcv_bytes)[i] = 0;
+        }
     }
 
     uint32_t rcv_bytes = 0;
@@ -45,17 +43,18 @@ struct port_stat_t {
 extern port_stat_t port_stat[MIDI_PORTS + 1];
 extern bool port_stat_update;
 
-extern bool port_mon;
-extern bool port_in_mon[MIDI_PORTS];
-extern bool port_out_mon[MIDI_PORTS];
+extern bool mon_enabled;
+extern bool port_mon[2][MIDI_PORTS];
 
 void init();
 void splitter();
 
 uint8_t send(uint8_t port, const uint8_t *buf, uint8_t size);
 
-void start_mon();
+void start_mon(bool out = true, bool in = true);
 void stop_mon();
+void mon(uint8_t port, bool dir_in, const uint8_t *b, uint8_t size);
+uint8_t normalize(uint8_t port, uint8_t data);
 
 }
 

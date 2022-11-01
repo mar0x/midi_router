@@ -1,9 +1,11 @@
 
 #pragma once
 
-namespace {
+#include <string.h>
 
-bool cdc_dtr = false;
+extern bool cdc_dtr;
+
+namespace {
 
 void _cdc_print_eol() __attribute__((unused));
 void cdc_print_eol() __attribute__((unused));
@@ -19,6 +21,9 @@ void cdc_print(char c) __attribute__((unused));
 
 void _cdc_print(const char *s) __attribute__((unused));
 void cdc_print(const char *s) __attribute__((unused));
+
+void _cdc_print_hex(uint8_t n) __attribute__((unused));
+void cdc_print_hex(uint8_t n) __attribute__((unused));
 
 void cdc_prompt() __attribute__((unused));
 
@@ -125,6 +130,21 @@ void _cdc_print(T n) {
 
     for(s++; s < sizeof(buf); s++) {
         udi_cdc_putc(buf[s]);
+    }
+}
+
+void _cdc_print_hex(uint8_t n) {
+    static char hex_chars[16] = {
+      '0', '1', '2', '3', '4', '5', '6', '7',
+      '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', };
+
+    udi_cdc_putc(hex_chars[n >> 4]);
+    udi_cdc_putc(hex_chars[n & 0x0F]);
+}
+
+void cdc_print_hex(uint8_t n) {
+    if (cdc_dtr) {
+        _cdc_print_hex(n);
     }
 }
 
