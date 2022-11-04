@@ -192,9 +192,7 @@ int main(void)
                 }
             }
 
-            if (midi::pending_timer.update(t)) {
-                midi::pending_timeout();
-            }
+            midi::timer_update(t);
         }
 
         if (last_dtr != cdc_dtr) {

@@ -35,83 +35,54 @@ template<> midi::merger_state_t midi::merger_t<MERGE_SRC, MERGE_DST>::state = { 
 midi::splitter_t<SPLIT_SRC, SPLIT_DST> splitter_state;
 template<> midi::splitter_state_t midi::splitter_t<SPLIT_SRC, SPLIT_DST>::state = { };
 
+enum {
+    WAIT_CC,
+    WAIT_0x14,
+    WAIT_DATA
+} port2_state = WAIT_CC;
+
+bool port0_active = false;
+artl::timer<> port0_active_timer;
+
 void merger_rx_complete(uint8_t port, uint8_t data, bool ferr) {
     midi::mon(port, true, &data, 1);
-
-#if 0
-    uint8_t ds = midi_cmd_serial(data);
-
-    if (midi::input_filter(port, data, ds)) {
-        midi::input_channelizer(port, data, ds);
-        uint8_t route = midi::routing(port, data, ds);
-
-        for(uint8_t i = 0; i < MIDI_PORTS; ++i) {
-            if ((route & (1 << i)) == 0) continue;
-
-            uint8_t out_data = data;
-
-            midi::output_channelizer(i, out_data, ds);
-            if (midi::output_filter(i, out_data, ds)) {
-                midi::mixer(port, i, out_data);
-            }
-        }
-    }
-#endif
 
     if (port == 3) {
         splitter_state.rx_complete(port, data, ferr);
     } else {
-        if (port == 0) {
-            static bool port0_pass = false;
-
-            if (is_midi_cmd(data)) {
-                if (is_midi_rt(data)) {
-                    switch (data) {
-                    case CMD_SYS_CLOCK:
-                    case CMD_SYS_TICK:
-                    case CMD_SYS_START:
-                    case CMD_SYS_CONT:
-                    case CMD_SYS_STOP: goto pass;
-                    default: return;
+        if (port == 2) {
+            switch (port2_state) {
+            case WAIT_CC:
+                if (data == CMD_CTRL_CHANGE) {
+                    port2_state = WAIT_0x14;
+                }
+                break;
+            case WAIT_0x14:
+                if (data == 0x14) {
+                    port2_state = WAIT_DATA;
+                } else {
+                    port2_state = WAIT_CC;
+                }
+                break;
+            case WAIT_DATA:
+                if (port0_active != (data != 0)) {
+                    port0_active = (data != 0);
+                    if (port0_active) {
+                        ui::rx_active(0);
+                        port0_active_timer.schedule(millis() + 300);
+                    } else {
+                        ui::rx_blink_state[0].stop();
+                        port0_active_timer.cancel();
                     }
                 }
-
-                port0_pass = (data == CMD_SYS_EX) || (data == CMD_SYS_MTC);
-
-                if (port0_pass || data == CMD_SYS_EX_END) {
-                    goto pass;
-                }
-            } else {
-                if (port0_pass) {
-                    goto pass;
-                }
-                return;
+                port2_state = WAIT_CC;
+                break;
             }
         }
-#if 0
-        if (port == 1) {
-            static uint8_t port1_pass = 0;
-
-            if (is_midi_cmd(data)) {
-                port1_pass = 0;
-
-                switch (midi_cmd_t::command(data)) {
-                case CMD_SYS_TICK:
-                case CMD_SYS_CLOCK: goto pass;
-                case CMD_SYS_MTC: port1_pass = 1; goto pass;
-                case CMD_CTRL_CHANGE: port1_pass = 2; goto pass;
-                default: return;
-                }
-            } else {
-                if (port1_pass > 0) {
-                    --port1_pass;
-                    goto pass;
-                }
-                return;
-            }
+        if (port == 0 && !port0_active) {
+            return;
         }
-#endif
-pass:
+
         merger_state.rx_complete(port, data, ferr);
     }
 }
@@ -176,9 +147,16 @@ uint8_t send(uint8_t port, const uint8_t *buf, uint8_t size) {
     return ALL::write_buf(port, buf, size);
 }
 
-void pending_timeout() {
-    crit_sec cs;
-    merger_state.pending_timeout();
+void timer_update(unsigned long t) {
+    if (pending_timer.update(t)) {
+        crit_sec cs;
+        merger_state.pending_timeout();
+    }
+
+    if (port0_active_timer.update(t)) {
+        ui::rx_active(0);
+        port0_active_timer.schedule(t + 300);
+    }
 }
 
 void dump_state() {

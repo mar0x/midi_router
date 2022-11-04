@@ -60,7 +60,7 @@ extern process_dre_t on_dre;
 void init(process_byte_t cb = NULL);
 
 uint8_t send(uint8_t port, const uint8_t *buf, uint8_t size);
-void pending_timeout();
+void timer_update(unsigned long t);
 
 void dump_state();
 
