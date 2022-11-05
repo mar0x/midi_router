@@ -44,6 +44,18 @@ enum {
 bool port0_active = false;
 artl::timer<> port0_active_timer;
 
+void port0_activate(bool v) {
+    if (port0_active != v) {
+        port0_active = v;
+        if (port0_active) {
+            ui::rx_active(0);
+            port0_active_timer.schedule(millis() + 300);
+        } else {
+            port0_active_timer.cancel();
+        }
+    }
+}
+
 void merger_rx_complete(uint8_t port, uint8_t data, bool ferr) {
     midi::mon(port, true, &data, 1);
 
@@ -65,16 +77,7 @@ void merger_rx_complete(uint8_t port, uint8_t data, bool ferr) {
                 }
                 break;
             case WAIT_DATA:
-                if (port0_active != (data != 0)) {
-                    port0_active = (data != 0);
-                    if (port0_active) {
-                        ui::rx_active(0);
-                        port0_active_timer.schedule(millis() + 300);
-                    } else {
-                        ui::rx_blink_state[0].stop();
-                        port0_active_timer.cancel();
-                    }
-                }
+                port0_activate(data != 0);
                 port2_state = WAIT_CC;
                 break;
             }
@@ -134,12 +137,16 @@ void init(process_byte_t cb) {
 
         on_rx_complete = cb;
         on_dre = dummy_process_dre;
+
+        port0_activate(false);
     } else {
         merger_state.enable();
         splitter_state.enable();
 
         on_rx_complete = merger_rx_complete;
         on_dre = merger_process_dre;
+
+        port0_activate(true);
     }
 }
 
@@ -153,7 +160,7 @@ void timer_update(unsigned long t) {
         merger_state.pending_timeout();
     }
 
-    if (port0_active_timer.update(t)) {
+    if (port0_active_timer.update(t) && port0_active) {
         ui::rx_active(0);
         port0_active_timer.schedule(t + 300);
     }
