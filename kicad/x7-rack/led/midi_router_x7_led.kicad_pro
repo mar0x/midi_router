@@ -380,8 +380,8 @@
       "idf": "",
       "netlist": "",
       "specctra_dsn": "",
-      "step": "",
-      "vrml": ""
+      "step": "../../../box/midi_router_x7_led.STEP",
+      "vrml": "../../../box/midi_router_x7_led.wrl"
     },
     "page_layout_descr_file": ""
   },
