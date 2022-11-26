@@ -91,10 +91,10 @@ void merger_rx_complete(uint8_t port, uint8_t data, bool ferr) {
 }
 
 void merger_process_dre(uint8_t port) {
-    if (port == 3) {
-        splitter_state.process_dre(port);
-    } else {
+    if (port == 0) {
         merger_state.process_dre(port);
+    } else {
+        splitter_state.process_dre(port);
     }
 }
 
