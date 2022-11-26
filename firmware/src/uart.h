@@ -244,7 +244,7 @@ template<
     typename TX_TRAITS = tx_dummy_traits,
     typename PORT_TRAITS = port::traits<PORT>,
     typename BAUD_TRAITS = baud_traits<RATE, F_CPU>,
-    typename TX_RING = ring<64, uint8_t> >
+    typename TX_RING = ring<32, uint8_t> >
 struct uart_t : public RX_TRAITS {
     using rx_traits = RX_TRAITS;
     using tx_traits = TX_TRAITS;
