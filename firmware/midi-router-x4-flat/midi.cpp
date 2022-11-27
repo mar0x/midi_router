@@ -42,17 +42,19 @@ enum {
 } port2_state = WAIT_CC;
 
 enum {
-    WAIT_NOTE_ON,
-    WAIT_TONE,
-    WAIT_VELOCITY
-} port3_state = WAIT_NOTE_ON;
+    WAIT_COMMAND,
+    WAIT_NOTE_ON_TONE,
+    WAIT_NOTE_ON_VELOCITY,
+    WAIT_NOTE_OFF_TONE,
+    WAIT_NOTE_OFF_VELOCITY,
+} port3_state = WAIT_COMMAND;
 
 uint8_t port3_last_cmd;
 uint8_t port3_last_tone;
 
 enum {
-    NOTE_START = NOTE_C2, // C2
-    NOTE_END = NOTE_Cs4,  // C#4
+    NOTE_START = NOTE_C3, // C3
+    NOTE_END = NOTE_Cs5,  // C#5
 
     FALLBACK_CC = 12,
 
@@ -65,13 +67,13 @@ struct complex_map {
 };
 
 complex_map note2ccs_map[] = {
-    /* C2  */ { NOTE_C2,  { 20, 21, 22, 23 }, },
-    /* C#2 */ { NOTE_Cs2, { 24, 25, 26, 27 }, },
-    /* D2  */ { NOTE_D2,  { 28, 29, 30, 31 }, },
+    /* C3  */ { NOTE_C3,  { 20, 21, 22, 23 }, },
+    /* C#3 */ { NOTE_Cs3, { 24, 25, 26, 27 }, },
+    /* D3  */ { NOTE_D3,  { 28, 29, 30, 31 }, },
 
-    /* E3  */ { NOTE_E3,  { 102, 103, 104, 0 }, },
-    /* F3  */ { NOTE_F3,  { 105, 106, 107, 0 }, },
-    /* F#3 */ { NOTE_Fs3, { 108, 109, 0, 0 }, },
+    /* E4  */ { NOTE_E4,  { 102, 103, 104, 0 }, },
+    /* F4  */ { NOTE_F4,  { 105, 106, 107, 0 }, },
+    /* F#4 */ { NOTE_Fs4, { 108, 109, 0, 0 }, },
 };
 
 enum {
@@ -79,31 +81,31 @@ enum {
 };
 
 uint8_t note2cc_map[] = {
-    /* C2  */  20, // 21, 22, 23
-    /* C#2 */  24, // 25, 26, 27
-    /* D2  */  28, // 29, 30, 31
-    /* D#2 */  52,
-    /* E2  */  53,
-    /* F2  */  54,
-    /* F#2 */  61,
-    /* G2  */  55,
-    /* G#2 */  56,
-    /* A2  */  57,
-    /* A#2 */  58,
-    /* B2  */  13,
-    /* C3  */  75,
-    /* C#3 */  76,
-    /* D3  */  77,
-    /* D#3 */  78,
-    /* E3  */ 102, // 103, 104
-    /* F3  */ 105, // 106, 107
-    /* F#3 */ 108, // 109
-    /* G3  */  62,
-    /* G#3 */  40,
-    /* A3  */  41,
-    /* A#3 */  42,
-    /* B3  */  43,
-    /* C4  */  59,
+    /* C3  */  20, // 21, 22, 23
+    /* C#3 */  24, // 25, 26, 27
+    /* D3  */  28, // 29, 30, 31
+    /* D#3 */  52,
+    /* E3  */  53,
+    /* F3  */  54,
+    /* F#3 */  61,
+    /* G3  */  55,
+    /* G#3 */  56,
+    /* A3  */  57,
+    /* A#3 */  58,
+    /* B3  */  13,
+    /* C4  */  75,
+    /* C#4 */  76,
+    /* D4  */  77,
+    /* D#4 */  78,
+    /* E4  */ 102, // 103, 104
+    /* F4  */ 105, // 106, 107
+    /* F#4 */ 108, // 109
+    /* G4  */  62,
+    /* G#4 */  40,
+    /* A4  */  41,
+    /* A#4 */  42,
+    /* B4  */  43,
+    /* C5  */  59,
 };
 
 void merger_rx_complete(uint8_t port, uint8_t data, bool ferr) {
@@ -111,16 +113,25 @@ void merger_rx_complete(uint8_t port, uint8_t data, bool ferr) {
 
     if (port == 3) {
         if (!is_midi_rt(data)) {
+            if (is_midi_cmd(data)) {
+                port3_state = WAIT_COMMAND;
+            }
+
             switch (port3_state) {
-            case WAIT_NOTE_ON:
+            case WAIT_COMMAND:
                 if (midi_cmd_t::command(data) == CMD_NOTE_ON) {
-                    port3_state = WAIT_TONE;
+                    port3_state = WAIT_NOTE_ON_TONE;
                     data = CMD_CTRL_CHANGE | (data & 0x0FU);
                     port3_last_cmd = data;
+                    return;
+                }
+                if (midi_cmd_t::command(data) == CMD_NOTE_OFF) {
+                    port3_state = WAIT_NOTE_OFF_TONE;
+                    return;
                 }
                 break;
-            case WAIT_TONE:
-                port3_state = WAIT_VELOCITY;
+            case WAIT_NOTE_ON_TONE:
+                port3_state = WAIT_NOTE_ON_VELOCITY;
                 if (data >= NOTE_START && data < NOTE_END) {
                     port3_last_tone = data;
                     data = note2cc_map[data - NOTE_START];
@@ -128,13 +139,21 @@ void merger_rx_complete(uint8_t port, uint8_t data, bool ferr) {
                     port3_last_tone = 0xFF;
                     data = FALLBACK_CC;
                 }
-                break;
-            case WAIT_VELOCITY:
-                port3_state = WAIT_NOTE_ON;
+                return;
+            case WAIT_NOTE_ON_VELOCITY:
+                port3_state = WAIT_NOTE_ON_TONE;
+                if (data == 0 || port3_last_tone == 0xFF) {
+                    return;
+                }
+
                 data = (data < NOTE_VEL_DEC) ? 0 : data - NOTE_VEL_DEC;
+
+                splitter_state.rx_complete(port, port3_last_cmd, false);
+                splitter_state.rx_complete(port, note2cc_map[port3_last_tone - NOTE_START], false);
+                splitter_state.rx_complete(port, data, false);
+
                 for (uint8_t i = 0; i < MAX_COMPLEX; ++i) {
                     if (note2ccs_map[i].tone == port3_last_tone) {
-                        splitter_state.rx_complete(port, data, ferr);
                         for (uint8_t n = 1; n < 4; ++n) {
                             uint8_t cc = note2ccs_map[i].cc[n];
                             if (cc == 0) {
@@ -147,7 +166,13 @@ void merger_rx_complete(uint8_t port, uint8_t data, bool ferr) {
                         return;
                     }
                 }
-                break;
+                return;
+            case WAIT_NOTE_OFF_TONE:
+                port3_state = WAIT_NOTE_OFF_VELOCITY;
+                return;
+            case WAIT_NOTE_OFF_VELOCITY:
+                port3_state = WAIT_NOTE_OFF_TONE;
+                return;
             }
         }
 
