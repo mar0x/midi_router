@@ -24,16 +24,13 @@ template<> uart_e0::tx_ring_t uart_e0::tx_ring = {};
 template<> uint8_t uart_e0::want_write = 0;
 
 using ALL = uart_list<uart_c0, uart_c1, uart_d0, uart_e0>;
-using MERGE_SRC = uart_list<uart_d0, uart_e0, uart_c0>;
-using MERGE_DST = uart_list<uart_e0>;
-using SPLIT_SRC = uart_c0;
-using SPLIT_DST = uart_list<uart_c1, uart_d0, uart_c0>;
+using MERGE_SRC = uart_list<uart_e0, uart_d0, uart_c1>;
+using MERGE_DST = uart_list<uart_d0, uart_e0>;
+using CC_DST_0 = uart_c0;
+using CC_DST_1 = uart_c1;
 
 midi::merger_t<MERGE_SRC, MERGE_DST> merger_state;
 template<> midi::merger_state_t midi::merger_t<MERGE_SRC, MERGE_DST>::state = { };
-
-midi::splitter_t<SPLIT_SRC, SPLIT_DST> splitter_state;
-template<> midi::splitter_state_t midi::splitter_t<SPLIT_SRC, SPLIT_DST>::state = { };
 
 enum {
     WAIT_CC,
@@ -51,6 +48,7 @@ enum {
 
 uint8_t port3_last_cmd;
 uint8_t port3_last_tone;
+uint8_t port3_last_dst;
 
 enum {
     NOTE_START = NOTE_C3, // C3
@@ -112,24 +110,35 @@ void merger_rx_complete(uint8_t port, uint8_t data, bool ferr) {
     midi::mon(port, true, &data, 1);
 
     if (port == 3) {
+        if (is_midi_cmd(data)) {
+            ui::rx_data(data == CMD_SYS_ACTIVE_S, port);
+        }
+
         if (!is_midi_rt(data)) {
             if (is_midi_cmd(data)) {
                 port3_state = WAIT_COMMAND;
             }
 
             switch (port3_state) {
-            case WAIT_COMMAND:
-                if (midi_cmd_t::command(data) == CMD_NOTE_ON) {
-                    port3_state = WAIT_NOTE_ON_TONE;
-                    data = CMD_CTRL_CHANGE | (data & 0x0FU);
-                    port3_last_cmd = data;
-                    return;
-                }
-                if (midi_cmd_t::command(data) == CMD_NOTE_OFF) {
-                    port3_state = WAIT_NOTE_OFF_TONE;
-                    return;
+            case WAIT_COMMAND: {
+                uint8_t cmd = midi_cmd_t::command(data);
+                uint8_t ch = midi_cmd_t::channel(data);
+
+                if (ch == 14 || ch == 15) {
+                    if (cmd == CMD_NOTE_ON) {
+                        port3_state = WAIT_NOTE_ON_TONE;
+                        data = CMD_CTRL_CHANGE | (ch - 12);
+                        port3_last_cmd = data;
+                        port3_last_dst = ch - 14;
+                        return;
+                    }
+                    if (cmd == CMD_NOTE_OFF) {
+                        port3_state = WAIT_NOTE_OFF_TONE;
+                        return;
+                    }
                 }
                 break;
+            }
             case WAIT_NOTE_ON_TONE:
                 port3_state = WAIT_NOTE_ON_VELOCITY;
                 if (data >= NOTE_START && data < NOTE_END) {
@@ -148,9 +157,17 @@ void merger_rx_complete(uint8_t port, uint8_t data, bool ferr) {
 
                 data = (data < NOTE_VEL_DEC) ? 0 : data - NOTE_VEL_DEC;
 
-                splitter_state.rx_complete(port, port3_last_cmd, false);
-                splitter_state.rx_complete(port, note2cc_map[port3_last_tone - NOTE_START], false);
-                splitter_state.rx_complete(port, data, false);
+                if (port3_last_dst == 0) {
+                    CC_DST_0::write_byte(port3_last_cmd);
+                    CC_DST_0::write_byte(note2cc_map[port3_last_tone - NOTE_START]);
+                    CC_DST_0::write_byte(data);
+                    ui::tx_blink(CC_DST_0::tx_traits::id);
+                } else {
+                    CC_DST_1::write_byte(port3_last_cmd);
+                    CC_DST_1::write_byte(note2cc_map[port3_last_tone - NOTE_START]);
+                    CC_DST_1::write_byte(data);
+                    ui::tx_blink(CC_DST_1::tx_traits::id);
+                }
 
                 for (uint8_t i = 0; i < MAX_COMPLEX; ++i) {
                     if (note2ccs_map[i].tone == port3_last_tone) {
@@ -159,9 +176,15 @@ void merger_rx_complete(uint8_t port, uint8_t data, bool ferr) {
                             if (cc == 0) {
                                 break;
                             }
-                            splitter_state.rx_complete(port, port3_last_cmd, false);
-                            splitter_state.rx_complete(port, cc, false);
-                            splitter_state.rx_complete(port, data, false);
+                            if (port3_last_dst == 0) {
+                                CC_DST_0::write_byte(port3_last_cmd);
+                                CC_DST_0::write_byte(cc);
+                                CC_DST_0::write_byte(data);
+                            } else {
+                                CC_DST_1::write_byte(port3_last_cmd);
+                                CC_DST_1::write_byte(cc);
+                                CC_DST_1::write_byte(data);
+                            }
                         }
                         return;
                     }
@@ -176,7 +199,12 @@ void merger_rx_complete(uint8_t port, uint8_t data, bool ferr) {
             }
         }
 
-        splitter_state.rx_complete(port, data, ferr);
+        CC_DST_0::write_byte(data);
+        CC_DST_1::write_byte(data);
+        if (is_midi_cmd(data)) {
+            ui::tx_data(data == CMD_SYS_ACTIVE_S, CC_DST_0::tx_traits::id);
+            ui::tx_data(data == CMD_SYS_ACTIVE_S, CC_DST_1::tx_traits::id);
+        }
     } else {
         if (port == 2) {
             switch (port2_state) {
@@ -203,10 +231,8 @@ void merger_rx_complete(uint8_t port, uint8_t data, bool ferr) {
 }
 
 void merger_process_dre(uint8_t port) {
-    if (port == 3) {
+    if (port > 1) {
         merger_state.process_dre(port);
-    } else {
-        splitter_state.process_dre(port);
     }
 }
 
@@ -245,13 +271,11 @@ void init(process_byte_t cb) {
 
     if (cb) {
         merger_state.disable();
-        splitter_state.disable();
 
         on_rx_complete = cb;
         on_dre = dummy_process_dre;
     } else {
         merger_state.enable();
-        splitter_state.enable();
 
         on_rx_complete = merger_rx_complete;
         on_dre = merger_process_dre;

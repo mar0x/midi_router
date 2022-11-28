@@ -93,6 +93,10 @@ struct midi_cmd_t {
             * ((b & 0xF0) + is_midi_sys(b) * (b & 0x0F));
     }
 
+    static uint8_t channel(uint8_t b) {
+        return b & 0x0FU;
+    }
+
     bool sys_ex() const { return sys_ex_ || (size_ > 0 && command() == CMD_SYS_EX); }
     void sys_ex(bool v) { sys_ex_ = v; }
 
