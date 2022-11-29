@@ -31,8 +31,6 @@ bool port_stat_update = false;
 bool port_mon[2][MIDI_PORTS];
 bool mon_enabled = false;
 
-artl::timer<> pending_timer;
-
 process_byte_t on_rx_complete;
 process_dre_t on_dre;
 

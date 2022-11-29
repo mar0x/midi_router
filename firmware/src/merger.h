@@ -62,6 +62,7 @@ struct merger_state_t {
     uint8_t pending_in_bytes[MIDI_IN_PORTS + 1];
     unsigned long last_byte_time = 0;
     bool pending_timeout_fired = false;
+    artl::timer<> pending_timer;
 
     ring<16, uint8_t> port_byte_queue[MIDI_IN_PORTS + 1];
     ring<8, uint8_t> rt_queue;
@@ -83,7 +84,7 @@ struct merger_t {
 
         state.last_byte_time = 0;
         state.pending_timeout_fired = false;
-        pending_timer.cancel();
+        state.pending_timer.cancel();
 
         for (uint8_t i = 0; i < MIDI_IN_PORTS + 1; ++i) {
             state.port_byte_queue[i].clear();
@@ -196,9 +197,9 @@ struct merger_t {
             return;
         }
 
-        if (state.last_byte_time != 0 && !pending_timer.active()) {
+        if (state.last_byte_time != 0 && !state.pending_timer.active()) {
             state.pending_port = state.port_queue_front();
-            pending_timer.schedule(state.last_byte_time + PENDING_TIMEOUT_MS);
+            state.pending_timer.schedule(state.last_byte_time + PENDING_TIMEOUT_MS);
         }
     }
 
@@ -215,6 +216,12 @@ struct merger_t {
             }
 
             process_queue();
+        }
+    }
+
+    static void timer_update(unsigned long t) {
+        if (state.pending_timer.update(t)) {
+            pending_timeout();
         }
     }
 
@@ -309,12 +316,12 @@ private:
 
             if (state.port_queue.size() > 1) {
                 state.pending_port = state.port_queue_front();
-                pending_timer.schedule(state.last_byte_time + PENDING_TIMEOUT_MS);
+                state.pending_timer.schedule(state.last_byte_time + PENDING_TIMEOUT_MS);
             }
         } else {
             if (state.last_byte_time != 0) {
                 state.last_byte_time = 0;
-                pending_timer.cancel();
+                state.pending_timer.cancel();
             }
         }
 
