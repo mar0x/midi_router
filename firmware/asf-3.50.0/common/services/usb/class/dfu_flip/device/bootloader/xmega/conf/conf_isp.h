@@ -73,6 +73,11 @@
 # define ISP_PORT_PINCTRL  PORTA_PIN1CTRL
 # define ISP_PORT_IN       PORTA_IN
 # define ISP_PORT_PIN      1
+#elif defined(MIDI_ROUTER_X7_RACK)
+# define ISP_PORT_DIR      PORTQ_DIR
+# define ISP_PORT_PINCTRL  PORTQ_PIN0CTRL
+# define ISP_PORT_IN       PORTQ_IN
+# define ISP_PORT_PIN      0
 #else
 # define ISP_PORT_DIR      PORTF_DIR
 # define ISP_PORT_PINCTRL  PORTF_PIN5CTRL

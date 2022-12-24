@@ -16,6 +16,10 @@
             </member>
             <member>
                 <project>bootloader_xmega</project>
+                <configuration>atxmega128a1u-x7-rack</configuration>
+            </member>
+            <member>
+                <project>bootloader_xmega</project>
                 <configuration>atxmega128a4u-x4</configuration>
             </member>
             <member>

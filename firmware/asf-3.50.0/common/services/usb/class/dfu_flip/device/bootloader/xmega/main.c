@@ -96,6 +96,23 @@ int main(void)
 	PORTF.OUTSET = (1 << 3) | (1 << 7);
 
 	PORTK.DIRSET = (1 << 1);
+#elif defined(MIDI_ROUTER_X7_RACK)
+# define ISP_LED_ON (PORTK.OUTSET = (1 << 7))
+# define ISP_LED_OFF (PORTK.OUTCLR = (1 << 7))
+
+	PORTC.DIRSET = (1 << 3) | (1 << 7);
+	PORTD.DIRSET = (1 << 3);
+	PORTE.DIRSET = (1 << 3) | (1 << 7);
+	PORTF.DIRSET = (1 << 3) | (1 << 7);
+
+	PORTC.OUTSET = (1 << 3) | (1 << 7);
+	PORTD.OUTSET = (1 << 3);
+	PORTE.OUTSET = (1 << 3) | (1 << 7);
+	PORTF.OUTSET = (1 << 3) | (1 << 7);
+
+	PORTH.DIRSET = 0xFF;
+	PORTJ.DIRSET = 0xFF;
+	PORTK.DIRSET = 0xFF;
 #else
 # define ISP_LED_ON
 # define ISP_LED_OFF
