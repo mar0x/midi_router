@@ -73,6 +73,12 @@ void init(void)
     led_tx4::setup();
     led_tx5::setup();
     led_tx6::setup();
+    led_mode0::setup();
+    led_mode1::setup();
+    led_mode2::setup();
+    led_mode3::setup();
+    led_mode4::setup();
+    led_mode_btn::setup();
 
     oen::setup();
 
@@ -104,6 +110,14 @@ void powerdown(void)
     led_tx4::low();
     led_tx5::low();
     led_tx6::low();
+
+    led_mode0::low();
+    led_mode1::low();
+    led_mode2::low();
+    led_mode3::low();
+    led_mode4::low();
+
+    led_mode_btn::low();
 }
 
 void wakeup(void)
@@ -153,6 +167,14 @@ void led_test_enable() {
     led_tx4::high();
     led_tx5::high();
     led_tx6::high();
+
+    led_mode0::high();
+    led_mode1::high();
+    led_mode2::high();
+    led_mode3::high();
+    led_mode4::high();
+
+    led_mode_btn::high();
 }
 
 void led_test_disable() {
