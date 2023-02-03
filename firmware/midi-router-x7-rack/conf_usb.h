@@ -222,6 +222,7 @@
 //@}
 
 #define MIDI_PORTS 7
+#define MODE_COUNT 6
 
 /**
  * USB Device Driver Configuration

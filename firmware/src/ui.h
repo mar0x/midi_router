@@ -44,6 +44,9 @@ extern "C" {
 #include "pulse_state.h"
 
 #define USB_LED_ID MIDI_PORTS
+#ifndef MODE_COUNT
+#define MODE_COUNT 0
+#endif
 
 namespace ui {
 
@@ -51,6 +54,7 @@ extern pulse_state_t pulse_state;
 extern blink_state_t rst_blink_state;
 extern blink_state_t rx_blink_state[MIDI_PORTS + 1];
 extern blink_state_t tx_blink_state[MIDI_PORTS + 1];
+extern blink_state_t mode_blink_state[MODE_COUNT];
 
 extern bool usb_midi_enabled;
 
@@ -79,6 +83,9 @@ inline void tx_usb_blink() { tx_blink_state[USB_LED_ID].start(); }
 
 inline void rx_usb_active() { rx_blink_state[USB_LED_ID].active(); }
 inline void tx_usb_active() { tx_blink_state[USB_LED_ID].active(); }
+
+inline void mode_blink(uint8_t mode) { mode_blink_state[mode].start(); }
+inline void mode_active(uint8_t mode) { mode_blink_state[mode].active(); }
 
 inline void tx_blink() {
     for (uint8_t i = 0; i < MIDI_PORTS; ++i) {

@@ -39,14 +39,19 @@
 #include "led.h"
 #include <artl/button.h>
 #include <artl/digital_in.h>
+#include <artl/digital_out.h>
 #include <timer.h>
 #include <artl/timer.h>
 
 namespace {
 
 using btn_in = artl::digital_in<artl::port::Q, 0>;
+using front_en_in = artl::digital_in<artl::port::Q, 1>;
+using a_en_out = artl::digital_out<artl::port::Q, 2>;
+using b_en_out = artl::digital_out<artl::port::Q, 3>;
 
 artl::button<> btn;
+artl::button<> front_en;
 
 bool led_test = false;
 
@@ -79,6 +84,12 @@ void init(void)
     led_mode3::setup();
     led_mode4::setup();
     led_mode_btn::setup();
+
+    b_en_out::setup();
+    b_en_out::high();
+
+    a_en_out::setup();
+    a_en_out::low();
 
     oen::setup();
 
@@ -126,6 +137,20 @@ void wakeup(void)
 }
 
 bool btn_update(unsigned long t) {
+    if (front_en.update(!front_en_in::read(), t)) {
+        if (front_en.down()) {
+            a_en_out::high();
+            b_en_out::low();
+        } else {
+            b_en_out::high();
+            a_en_out::low();
+        }
+    }
+
+    if (front_en.down()) {
+        mode_active(0);
+    }
+
     return btn.update(!btn_in::read(), t);
 }
 
@@ -211,10 +236,17 @@ void led_test_disable() {
         led_rxusb::high();
         led_txusb::high();
     }
+
+    mode_blink_state[0].force_write<led_mode_btn>();
+    mode_blink_state[1].force_write<led_mode0>();
+    mode_blink_state[2].force_write<led_mode1>();
+    mode_blink_state[3].force_write<led_mode2>();
+    mode_blink_state[4].force_write<led_mode3>();
+    mode_blink_state[5].force_write<led_mode4>();
 }
 
 void startup_animation() {
-    const unsigned long frame_delay = 150;
+    const unsigned long frame_delay = 100;
     unsigned long t = millis();
 
     artl::timer<> next_frame;
@@ -235,18 +267,21 @@ void startup_animation() {
         ++frame_no;
 
         switch (frame_no) {
-        case 1: rx_blink(7); tx_blink(7); break;
-        case 2: rx_blink(0); tx_blink(6); break;
-        case 3: rx_blink(1); tx_blink(5); break;
-        case 4: rx_blink(2); tx_blink(4); break;
-        case 5: rx_blink(3); tx_blink(3); break;
-        case 6: rx_blink(4); tx_blink(2); break;
-        case 7: rx_blink(5); tx_blink(1); break;
-        case 8: rx_blink(6); tx_blink(0); break;
-        case 9: /* blank frame */; break;
+        case 1: rx_blink(7); tx_blink(7); mode_blink(5); break;
+        case 2: rx_blink(0); mode_blink(4); break;
+        case 3: rx_blink(1); mode_blink(3); break;
+        case 4: rx_blink(2); mode_blink(2); break;
+        case 5: rx_blink(3); mode_blink(1); break;
+        case 6: rx_blink(4); mode_blink(0); break;
+        case 7: rx_blink(5); tx_blink(6); break;
+        case 8: rx_blink(6); tx_blink(5); break;
+        case 9: tx_blink(0); tx_blink(4); break;
+        case 10: tx_blink(1); tx_blink(3); break;
+        case 11: tx_blink(2); break;
+        case 12: /* blank frame */; break;
         }
 
-        if (frame_no < 9) {
+        if (frame_no < 12) {
             next_frame.schedule(t + frame_delay);
         } else {
             break;
@@ -293,4 +328,11 @@ ISR(TCD2_HUNF_vect)
     tx_blink_state[5].write<led_tx5>();
     tx_blink_state[6].write<led_tx6>();
     tx_blink_state[7].write<led_txusb>();
+
+    mode_blink_state[0].write<led_mode_btn>();
+    mode_blink_state[1].write<led_mode0>();
+    mode_blink_state[2].write<led_mode1>();
+    mode_blink_state[3].write<led_mode2>();
+    mode_blink_state[4].write<led_mode3>();
+    mode_blink_state[5].write<led_mode4>();
 }
