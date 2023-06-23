@@ -27,6 +27,13 @@ $(1)-$(2)-upload-flip2:
 	$(MAKE) -f $(MAKEFILE_PATH) BOARD=$(1) MCU=$(2) upload-flip2
 
 
+.PHONY: $(1)-upload-ice $(1)-$(2)-upload-ice
+$(1)-upload-ice: $(1)-$(2)-upload-ice
+
+$(1)-$(2)-upload-ice:
+	$(MAKE) -f $(MAKEFILE_PATH) BOARD=$(1) MCU=$(2) upload-ice
+
+
 .PHONY: $(1)-upload-mk2 $(1)-$(2)-upload-mk2
 $(1)-upload-mk2: $(1)-$(2)-upload-mk2
 

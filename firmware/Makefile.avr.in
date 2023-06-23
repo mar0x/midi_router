@@ -6,6 +6,10 @@ include asf-3.50.0/common/utils/make/Makefile.avr.in
 upload-flip2: $(project).hex
 	$(AVRDUDE) -c flip2 -D -U application:w:$<:i
 
+.PHONY: upload-ice
+upload-ice: $(project).hex
+	$(AVRDUDE) -c atmelice_pdi -D -U application:w:$<:i
+
 .PHONY: upload-mk2
 upload-mk2: $(project).hex
 	$(AVRDUDE) -c avrispmkII -U application:w:$<:i
