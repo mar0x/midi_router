@@ -9,9 +9,11 @@ struct blink_state_t {
         ACTIVE = 0x1000,
         MIN_ACTIVE = ACTIVE - 0x100,
         STEP = 0x40,
+        THRESHOLD = 0x0400,
     };
 
     static bool get(uint16_t state) {
+//        return state >= THRESHOLD;
         uint8_t p = state >> 8;
 
         if (p > 254) { p = 254; }
@@ -64,6 +66,18 @@ struct blink_state_t {
 
         last_write = v;
         T::write(v);
+    }
+
+    template<typename T>
+    void low() {
+        last_write = false;
+        T::low();
+    }
+
+    template<typename T>
+    void high() {
+        last_write = true;
+        T::high();
     }
 
     uint16_t state = 0;

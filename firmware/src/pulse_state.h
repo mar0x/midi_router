@@ -12,6 +12,8 @@ struct pulse_state_t : public blink_state_t {
         state = START;
     }
 
+    void start() { state = START; }
+
     void next() {
         state += STEP / 4;
 

@@ -11,12 +11,16 @@ artl::timer<> rst_blink;
 
 void rst_blink_start(unsigned long t) {
     rst_blink_count = 0;
+    ui::rst_blink_state.last_write = ui::pulse_state.last_write;
+    ui::rst_blink_active = true;
     ui::rst_blink();
     rst_blink.schedule(t + 600);
 }
 
 void rst_blink_stop() {
     rst_blink.cancel();
+    ui::pulse_state.last_write = ui::rst_blink_state.last_write;
+    ui::rst_blink_active = false;
 }
 
 void rst_blink_update(unsigned long t) {

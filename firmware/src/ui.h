@@ -57,6 +57,7 @@ extern blink_state_t tx_blink_state[MIDI_PORTS + 1];
 extern blink_state_t mode_blink_state[MODE_COUNT];
 
 extern bool usb_midi_enabled;
+extern bool rst_blink_active;
 
 //! \brief Initializes the user interface
 void init(void);

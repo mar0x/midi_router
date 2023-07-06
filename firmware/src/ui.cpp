@@ -49,5 +49,6 @@ blink_state_t tx_blink_state[MIDI_PORTS + 1];
 blink_state_t mode_blink_state[MODE_COUNT];
 
 bool usb_midi_enabled = false;
+bool rst_blink_active = false;
 
 }

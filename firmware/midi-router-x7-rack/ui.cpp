@@ -102,33 +102,34 @@ void powerdown(void)
 {
     TCD2.INTCTRLA &= ~TC2_HUNFINTLVL_MED_gc; // disable HIGH underflow interrupt, pri level 2 (see 15.10.5 in AU manual)
 
-    led_pwr::low();
-    led_txusb::low();
-    led_rxusb::low();
+    pulse_state.low<led_pwr>();
+    rst_blink_state.low<led_pwr>();
 
-    led_rx0::low();
-    led_rx1::low();
-    led_rx2::low();
-    led_rx3::low();
-    led_rx4::low();
-    led_rx5::low();
-    led_rx6::low();
+    rx_blink_state[0].low<led_rx0>();
+    rx_blink_state[1].low<led_rx1>();
+    rx_blink_state[2].low<led_rx2>();
+    rx_blink_state[3].low<led_rx3>();
+    rx_blink_state[4].low<led_rx4>();
+    rx_blink_state[5].low<led_rx5>();
+    rx_blink_state[6].low<led_rx6>();
 
-    led_tx0::low();
-    led_tx1::low();
-    led_tx2::low();
-    led_tx3::low();
-    led_tx4::low();
-    led_tx5::low();
-    led_tx6::low();
+    tx_blink_state[0].low<led_tx0>();
+    tx_blink_state[1].low<led_tx1>();
+    tx_blink_state[2].low<led_tx2>();
+    tx_blink_state[3].low<led_tx3>();
+    tx_blink_state[4].low<led_tx4>();
+    tx_blink_state[5].low<led_tx5>();
+    tx_blink_state[6].low<led_tx6>();
 
-    led_mode0::low();
-    led_mode1::low();
-    led_mode2::low();
-    led_mode3::low();
-    led_mode4::low();
+    rx_blink_state[USB_LED_ID].low<led_rxusb>();
+    tx_blink_state[USB_LED_ID].low<led_txusb>();
 
-    led_mode_btn::low();
+    mode_blink_state[0].low<led_mode_btn>();
+    mode_blink_state[1].low<led_mode0>();
+    mode_blink_state[2].low<led_mode1>();
+    mode_blink_state[3].low<led_mode2>();
+    mode_blink_state[4].low<led_mode3>();
+    mode_blink_state[5].low<led_mode4>();
 }
 
 void wakeup(void)
@@ -162,10 +163,10 @@ void usb_midi_disable() {
     usb_midi_enabled = false;
 
     rx_blink_state[USB_LED_ID].stop();
-    led_rxusb::high();
+    rx_blink_state[USB_LED_ID].high<led_rxusb>();
 
     tx_blink_state[USB_LED_ID].stop();
-    led_txusb::high();
+    tx_blink_state[USB_LED_ID].high<led_txusb>();
 }
 
 void led_test_enable() {
@@ -173,33 +174,34 @@ void led_test_enable() {
 
     led_test = true;
 
-    led_pwr::high();
-    led_txusb::high();
-    led_rxusb::high();
+    pulse_state.high<led_pwr>();
+    rst_blink_state.high<led_pwr>();
 
-    led_rx0::high();
-    led_rx1::high();
-    led_rx2::high();
-    led_rx3::high();
-    led_rx4::high();
-    led_rx5::high();
-    led_rx6::high();
+    rx_blink_state[0].high<led_rx0>();
+    rx_blink_state[1].high<led_rx1>();
+    rx_blink_state[2].high<led_rx2>();
+    rx_blink_state[3].high<led_rx3>();
+    rx_blink_state[4].high<led_rx4>();
+    rx_blink_state[5].high<led_rx5>();
+    rx_blink_state[6].high<led_rx6>();
 
-    led_tx0::high();
-    led_tx1::high();
-    led_tx2::high();
-    led_tx3::high();
-    led_tx4::high();
-    led_tx5::high();
-    led_tx6::high();
+    tx_blink_state[0].high<led_tx0>();
+    tx_blink_state[1].high<led_tx1>();
+    tx_blink_state[2].high<led_tx2>();
+    tx_blink_state[3].high<led_tx3>();
+    tx_blink_state[4].high<led_tx4>();
+    tx_blink_state[5].high<led_tx5>();
+    tx_blink_state[6].high<led_tx6>();
 
-    led_mode0::high();
-    led_mode1::high();
-    led_mode2::high();
-    led_mode3::high();
-    led_mode4::high();
+    rx_blink_state[USB_LED_ID].high<led_rxusb>();
+    tx_blink_state[USB_LED_ID].high<led_txusb>();
 
-    led_mode_btn::high();
+    mode_blink_state[0].high<led_mode_btn>();
+    mode_blink_state[1].high<led_mode0>();
+    mode_blink_state[2].high<led_mode1>();
+    mode_blink_state[3].high<led_mode2>();
+    mode_blink_state[4].high<led_mode3>();
+    mode_blink_state[5].high<led_mode4>();
 }
 
 void led_test_disable() {
@@ -207,7 +209,7 @@ void led_test_disable() {
 
     led_test = false;
 
-    if (!btn.down()) {
+    if (!rst_blink_active) {
         pulse_state.force_write<led_pwr>();
     } else {
         rst_blink_state.force_write<led_pwr>();
@@ -229,13 +231,8 @@ void led_test_disable() {
     tx_blink_state[5].force_write<led_tx5>();
     tx_blink_state[6].force_write<led_tx6>();
 
-    if (usb_midi_enabled) {
-        rx_blink_state[USB_LED_ID].force_write<led_rxusb>();
-        tx_blink_state[USB_LED_ID].force_write<led_txusb>();
-    } else {
-        led_rxusb::high();
-        led_txusb::high();
-    }
+    rx_blink_state[USB_LED_ID].force_write<led_rxusb>();
+    tx_blink_state[USB_LED_ID].force_write<led_txusb>();
 
     mode_blink_state[0].force_write<led_mode_btn>();
     mode_blink_state[1].force_write<led_mode0>();
@@ -298,14 +295,14 @@ using namespace ui;
 ISR(TCD2_HUNF_vect)
 {
     if (led_test) {
-        if (btn.down()) {
+        if (rst_blink_active) {
             rst_blink_state.write<led_pwr>();
         }
 
         return;
     }
 
-    if (!btn.down()) {
+    if (!rst_blink_active) {
         pulse_state.write<led_pwr>();
     } else {
         rst_blink_state.write<led_pwr>();
@@ -318,7 +315,6 @@ ISR(TCD2_HUNF_vect)
     rx_blink_state[4].write<led_rx4>();
     rx_blink_state[5].write<led_rx5>();
     rx_blink_state[6].write<led_rx6>();
-    rx_blink_state[7].write<led_rxusb>();
 
     tx_blink_state[0].write<led_tx0>();
     tx_blink_state[1].write<led_tx1>();
@@ -327,7 +323,9 @@ ISR(TCD2_HUNF_vect)
     tx_blink_state[4].write<led_tx4>();
     tx_blink_state[5].write<led_tx5>();
     tx_blink_state[6].write<led_tx6>();
-    tx_blink_state[7].write<led_txusb>();
+
+    rx_blink_state[USB_LED_ID].write<led_rxusb>();
+    tx_blink_state[USB_LED_ID].write<led_txusb>();
 
     mode_blink_state[0].write<led_mode_btn>();
     mode_blink_state[1].write<led_mode0>();
