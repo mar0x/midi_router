@@ -62,6 +62,13 @@ $(1)-$(2)-upload:
 	$(MAKE) -f $(MAKEFILE_PATH) BOARD=$(1) MCU=$(2) upload
 
 
+.PHONY: $(1)-download $(1)-$(2)-download
+$(1)-download: $(1)-$(2)-download
+
+$(1)-$(2)-download:
+	$(MAKE) -f $(MAKEFILE_PATH) BOARD=$(1) MCU=$(2) download
+
+
 .PHONY: $(1)-bin $(1)-$(2)-bin
 $(1)-bin: $(1)-$(2)-bin
 
