@@ -32,10 +32,13 @@ upload: bin/dfu-$(MCU)-$(BOARD).ihex bin/hw-$(BOARD).ihex $(project).hex
     -U eeprom:w:bin/hw-$(BOARD).ihex:i \
     -U application:w:$(project).hex:i
 
+DL_SFX ?= -dl.ihex:i
+DL_DIR ?= ./
+
 .PHONY: download
 download:
-	$(AVRDUDE) -c avrispmkII \
-    -U flash:r:dfu-$(MCU)-$(BOARD)-dl.ihex:i \
-    -U fuse2:r:fuse2-$(MCU)-$(BOARD)-dl.ihex:i \
-    -U eeprom:r:hw-$(BOARD)-dl.ihex:i \
-    -U application:r:$(project)-dl.hex:i
+	$(AVRDUDE) -c avrispmkII -n \
+    -U flash:r:$(DL_DIR)dfu-$(MCU)-$(BOARD)$(DL_SFX) \
+    -U fuse2:r:$(DL_DIR)fuse2-$(MCU)-$(BOARD)$(DL_SFX) \
+    -U eeprom:r:$(DL_DIR)hw-$(BOARD)$(DL_SFX) \
+    -U application:r:$(DL_DIR)app-$(MCU)-$(BOARD)$(DL_SFX)
