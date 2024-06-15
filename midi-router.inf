@@ -1,0 +1,53 @@
+[Strings]
+DriverPackageDisplayName="MVR-Electronic Serial Port Driver for Windows 8.1 and earlier"
+ManufacturerName="MVR-Electronic"
+ServiceName="USB Serial Emulation Driver"
+mvr.Bootloader.Name="MIDI Router"
+
+[DefaultInstall]
+CopyINF=midi-router.inf
+
+[Version]
+Class=Ports
+ClassGuid={4D36E978-E325-11CE-BFC1-08002BE10318}
+Signature="$Windows NT$"
+Provider=%ManufacturerName%
+DriverVer=01/01/2023,1.0.0.0
+DriverPackageDisplayName=%DriverPackageDisplayName%
+
+[Manufacturer]
+%ManufacturerName%=DeviceList, NTamd64
+
+[DestinationDirs]
+FakeModemCopyFileSection=12
+DefaultDestDir=12
+
+[DeviceList]
+%mvr.Bootloader.Name%=DriverInstall, USB\VID_16C0&PID_05E4
+%mvr.Bootloader.Name%=DriverInstall, USB\VID_16C0&PID_05E4&MI_00
+
+[DeviceList.NTamd64]
+%mvr.Bootloader.Name%=DriverInstall, USB\VID_16C0&PID_05E4
+%mvr.Bootloader.Name%=DriverInstall, USB\VID_16C0&PID_05E4&MI_00
+
+[DriverInstall]
+include=mdmcpq.inf,usb.inf
+CopyFiles = FakeModemCopyFileSection
+AddReg=DriverAddReg
+
+[DriverAddReg]
+HKR,,DevLoader,,*ntkern
+HKR,,NTMPDriver,,usbser.sys
+HKR,,EnumPropPages32,,"MsPorts.dll,SerialPortPropPageProvider"
+
+[DriverInstall.Services]
+include=mdmcpq.inf
+AddService=usbser, 0x00000002, DriverService
+
+[DriverService]
+DisplayName=%ServiceName%
+ServiceType=1
+StartType=3
+ErrorControl=1
+ServiceBinary=%12%\usbser.sys
+LoadOrderGroup=Base
