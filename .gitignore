@@ -12,3 +12,6 @@ fp-info-cache
 miniconda3
 backup
 *-backups
+**/atxmega32a4u
+**/atxmega128a4u
+**/atxmega128a1u
