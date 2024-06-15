@@ -78,6 +78,7 @@ $(1)-$(2)-bin: $(1)/$(2)/$(1)-$(2).hex
 endef
 
 
+$(eval $(call BOARD_MCU_template,midi-router-x1-mini,atxmega32a4u))
 $(eval $(call BOARD_MCU_template,midi-router-x2,atxmega128a1u))
 $(eval $(call BOARD_MCU_template,midi-router-x4,atxmega32a4u))
 $(eval $(call BOARD_MCU_template,midi-router-x4-flat,atxmega32a4u))

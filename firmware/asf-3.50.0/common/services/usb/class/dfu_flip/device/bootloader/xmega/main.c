@@ -113,6 +113,12 @@ int main(void)
 	PORTH.DIRSET = 0xFF;
 	PORTJ.DIRSET = 0xFF;
 	PORTK.DIRSET = 0xFF;
+#elif defined(MIDI_ROUTER_X1_MINI)
+# define ISP_LED_ON (PORTE.OUTCLR = (1 << 2))
+# define ISP_LED_OFF (PORTE.OUTSET = (1 << 2))
+
+	PORTE.DIRSET = (1 << 2) | (1 << 3);
+	PORTE.OUTSET = (1 << 2) | (1 << 3);
 #else
 # define ISP_LED_ON
 # define ISP_LED_OFF

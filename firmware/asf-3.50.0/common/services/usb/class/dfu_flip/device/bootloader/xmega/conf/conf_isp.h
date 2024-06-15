@@ -101,6 +101,11 @@
 # define ISP_PORT_PINCTRL  PORTB_PIN2CTRL
 # define ISP_PORT_IN       PORTB_IN
 # define ISP_PORT_PIN      2
+#elif defined(MIDI_ROUTER_X1_MINI)
+# define ISP_PORT_DIR      PORTE_DIR
+# define ISP_PORT_PINCTRL  PORTE_PIN2CTRL
+# define ISP_PORT_IN       PORTE_IN
+# define ISP_PORT_PIN      0
 #else
 # define ISP_PORT_DIR      PORTC_DIR
 # define ISP_PORT_PINCTRL  PORTC_PIN3CTRL
